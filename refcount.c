@@ -3,6 +3,7 @@
 
 typedef struct Ref {
   void* value;
+  char* tag;
   int refcount;
   void (*destruct)(void *);
 } Ref;
@@ -57,32 +58,49 @@ void refs_destruct(Refs* ref) {
   }
 }
 
+void ref_destruct(Ref *ref) {
+  printf("destruct Ref tag: %s\n", ref->tag);
+  free(ref);
+}
+
 void ref_recycle(Ref* ref) {
   if (ref != NULL && ref->refcount == 0) {
     ref->destruct(ref->value);
   }
 }
 
-void ref_assign(Ref* lhs, Ref* rhs) {
-  if(lhs != NULL) {
-    lhs->refcount--;
+void ref_assign(Ref** l, Ref** r) {
+  if(l != NULL) {
+    (*l)->refcount--;
   }
 
-  if (rhs != NULL) {
-    rhs->refcount++;
+  if (r != NULL) {
+    (*r)->refcount++;
+  }
+  
+  if (l != NULL) {
+    ref_recycle(*l);
   }
 
-  ref_recycle(lhs);
+  if (l != NULL && (*l)->refcount == 0 && r == NULL) {
+    ref_destruct(*l);
+  }
+
+  if (l != NULL && r != NULL) {
+    ref_destruct(*l);
+    *l = *r;
+  }
 }
 
-Ref* new_ref(void* value, void (*destruct)(void *)) {
+Ref* new_ref(void* value, char* tag, void (*destruct)(void *)) {
   Ref* ref = (Ref *)malloc(sizeof(ref));
   refs_add(refs, ref);
 
   ref->value = value;
   ref->refcount = 0;
   ref->destruct = destruct;
-  ref_assign(NULL, ref);
+  ref->tag = tag;
+  ref_assign(NULL, &ref);
   return ref;
 }
 
@@ -103,7 +121,7 @@ Person* new_person(char* name, int age) {
 
 void person_destruct(void *p) {
   Person* person = (Person*) p;
-  printf("destruct Person name: %s, age: %d", person->name, person->age);
+  printf("destruct Person name: %s, age: %d\n", person->name, person->age);
   free(p);
 }
 
@@ -114,11 +132,23 @@ int main(int argc, const char *argv[])
 
   // instantiate person objects
   Person* p1 = new_person("musou1500", 24);
-  Ref* ref1 = new_ref(p1, person_destruct);
+  Ref* ref1 = new_ref(p1, "ref1", person_destruct);
   
   Person* p2 = new_person("musou1501", 24);
-  Ref* ref2 = new_ref(p1, person_destruct);
+  Ref* ref2 = new_ref(p2, "ref2", person_destruct);
+  // ref1(rc 1) -> musou1500
+  // ref2(rc 1) -> musou1501
 
-  ref_assign(ref2, ref1);
+  ref_assign(&ref2, &ref1);
+  // ref1(rc 2) ----> musou1500
+  // ref2(rc 0) _/
+
+  ref_assign(&ref1, NULL);
+  // ref1(rc 1)    NULL
+  // ref2(rc 0) -> musou1500
+
+  ref_assign(&ref2, NULL);
+  // ref1(rc 0)    NULL
+  // ref2(rc 0)    NULL
   return 0;
 }
