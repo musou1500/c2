@@ -1,8 +1,9 @@
 #include "./vec.h"
+#include <stdlib.h>
 
 Vec *new_vec() {
   Vec *vec = malloc(sizeof(Vec));
-  vec->data = malloc(sizeof(void *) * 16);
+  vec->data = (void **)malloc(sizeof(void *) * 16);
   vec->capacity = 16;
   vec->len = 0;
   return vec;

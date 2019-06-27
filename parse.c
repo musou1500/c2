@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
   char *name;
-  /* Node *expr; */
+  char *ident;
 } VarDecl;
 
 typedef struct {
@@ -51,27 +51,31 @@ FnCall *new_fn_call(char *name) {
   return fn_call;
 }
 
-VarDecl *new_var_decl(char *name) {
+VarDecl *new_var_decl(char *name, char *ident) {
   VarDecl *var_decl = (VarDecl *)malloc(sizeof(VarDecl));
   var_decl->name = name;
+  var_decl->ident = ident;
   return var_decl;
 }
 
 Node *new_type_decl_node(char *name) {
   Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_TYPE_DECL;
   node->type_decl = new_type_decl(name);
   return node;
 }
 
 Node *new_fn_call_node(char *name) {
   Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_FN_CALL;
   node->fn_call = new_fn_call(name);
   return node;
 }
 
-Node *new_var_decl_node(char *name) {
+Node *new_var_decl_node(char *name, char *ident) {
   Node *node = (Node *)malloc(sizeof(Node));
-  node->var_decl = new_var_decl(name);
+  node->type = ND_VAR_DECL;
+  node->var_decl = new_var_decl(name, ident);
   return node;
 }
 
@@ -102,7 +106,7 @@ bool parser_is_ident(Parser *parser) {
 
 bool parser_is_ident_of(Parser *parser, char *ident) {
   Token *tok = parser_tok(parser);
-  return tok->type == TK_IDENT && tok->val == ident;
+  return tok->type == TK_IDENT && strcmp(tok->val, ident) == 0;
 }
 
 bool parser_is_end(Parser *parser) {
@@ -126,6 +130,9 @@ Node *parser_type_decl(Parser *parser) {
     parser_error(parser, "\";\" is expected after type declaration");
     return NULL;
   }
+
+  // consume ";"
+  parser->pos++;
 
   return new_type_decl_node(tk_ident->val);
 }
@@ -156,31 +163,42 @@ Node *parser_fn_call(Parser *parser) {
 
 Node *parser_var_decl(Parser *parser) {
   Token *tk_ident = parser_tok(parser);
-
   // consume ident
   parser->pos++;
 
   if (!parser_is_tok(parser, '=')) {
     parser_error(parser, "\"=\" is expcted after variable name");
+    return NULL;
   }
 
   // consume "="
   parser->pos++;
 
+  if (!parser_is_ident(parser)) {
+    parser_error(parser, "identifier is expcted after \"=\"");
+    return NULL;
+  }
+
+  // TODO: implement expression
+  Token *tk_ident_l = parser_tok(parser);
+
+  // consume ident
+  parser->pos++;
+
   if (!parser_is_tok(parser, ';')) {
     parser_error(parser, "\";\" is expcted after variable declaration");
+    return NULL;
   }
 
   // consume ";"
   parser->pos++;
 
-  return new_var_decl_node(tk_ident->val);
+  return new_var_decl_node(tk_ident->val, tk_ident_l->val);
 }
 
 Parser *parse(char *source) {
   Parser *parser = new_parser(source);
   while (!parser_is_end(parser)) {
-
     if (parser_is_ident_of(parser, "type")) {
       // type declaration
       Node *type_decl = parser_type_decl(parser);

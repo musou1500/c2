@@ -1,4 +1,4 @@
-#include "lex.h"
+#include "parse.h"
 #include "refcount.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,15 +22,25 @@ void person_destruct(void *p) {
 }
 
 int main(int argc, const char *argv[]) {
-  Lexer *lexer = lex("type Person { int age; char tag; }");
-  for (int i = 0; i < lexer->tok_len; i++) {
-    Token *tok = lexer->tokens[i];
-    switch (tok->type) {
-    case TK_IDENT:
-      printf("TK_IDENT %s\n", tok->val);
+  Parser *parser = parse("type Person; a = b;");
+  if (parser->error != NULL) {
+    printf("parser error: %s\n", parser->error);
+  }
+
+  Vec *nodes = parser->nodes;
+  printf("%d nodes\n", nodes->len);
+  for (int i = 0; i < nodes->len; i++) {
+    Node *node = (Node *)nodes->data[i];
+
+    switch (node->type) {
+    case ND_FN_CALL:
+      printf("fn call %s\n", node->fn_call->name);
       break;
-    default:
-      printf("CH %d %c\n", tok->type, tok->type);
+    case ND_TYPE_DECL:
+      printf("type decl %s\n", node->type_decl->name);
+      break;
+    case ND_VAR_DECL:
+      printf("var decl %s = %s\n", node->var_decl->name, node->var_decl->ident);
       break;
     }
   }
