@@ -12,7 +12,7 @@ Refs *new_refs() {
 
 void init_refs() { refs = new_refs(); }
 
-Refs *refs_get_last(Refs *refs) {
+Refs *refs_get_last() {
   while (refs->next != NULL) {
     refs = refs->next;
   }
@@ -30,23 +30,18 @@ size_t refs_len() {
   return len;
 }
 
-void refs_add(Refs *refs, Ref *ref) {
+void refs_add(Ref *ref) {
   Refs *last = refs_get_last(refs);
   last->next = new_refs();
   last->next->val = ref;
 }
 
-void refs_destruct(Refs *ref) {
+void refs_destruct() {
   while (refs->next != NULL) {
     Refs *next = refs->next;
     free(refs);
     refs = next;
   }
-}
-
-void ref_destruct(Ref *ref) {
-  printf("destruct Ref tag: %s\n", ref->tag);
-  free(ref);
 }
 
 void ref_recycle(Ref *ref) {
@@ -55,37 +50,20 @@ void ref_recycle(Ref *ref) {
   }
 }
 
-void ref_assign(Ref **l, Ref **r) {
-  if (l != NULL) {
-    (*l)->refcount--;
+void ref_assign(Ref *lhs, Ref *rhs) {
+  if (lhs != NULL) {
+    lhs->refcount--;
   }
 
-  if (r != NULL) {
-    (*r)->refcount++;
+  if (rhs != NULL) {
+    rhs->refcount++;
   }
 
-  if (l != NULL) {
-    ref_recycle(*l);
+  if (lhs != NULL) {
+    ref_recycle(lhs);
   }
 
-  if (l != NULL && (*l)->refcount == 0 && r == NULL) {
-    ref_destruct(*l);
+  if (lhs != NULL && rhs != NULL) {
+    lhs->value = rhs->value;
   }
-
-  if (l != NULL && r != NULL) {
-    ref_destruct(*l);
-    *l = *r;
-  }
-}
-
-Ref *new_ref(void *value, char *tag, void (*destruct)(void *)) {
-  Ref *ref = (Ref *)malloc(sizeof(ref));
-  refs_add(refs, ref);
-
-  ref->value = value;
-  ref->refcount = 0;
-  ref->destruct = destruct;
-  ref->tag = tag;
-  ref_assign(NULL, &ref);
-  return ref;
 }

@@ -22,6 +22,29 @@ void person_destruct(void *p) {
 }
 
 int main(int argc, const char *argv[]) {
+  init_refs();
+
+  Person* p1 = new_person("musou1500", 24);
+  Ref ref1 = {
+    .value = p1,
+    .refcount = 0,
+    .destruct = person_destruct
+  };
+  refs_add(&ref1);
+  ref_assign(NULL, &ref1);
+
+  Person* p2 = new_person("musou1501", 24);
+  Ref ref2 = {
+    .value = p2,
+    .refcount = 0,
+    .destruct = person_destruct
+  };
+  refs_add(&ref2);
+  ref_assign(NULL, &ref2);
+
+  // ここで p2 は開放される
+  ref_assign(&ref2, &ref1);
+
   Parser *parser = parse("type Person; a = b;");
   if (parser->error != NULL) {
     printf("parser error: %s\n", parser->error);
