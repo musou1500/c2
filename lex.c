@@ -172,8 +172,6 @@ char *lex_digits(Lexer *lexer) {
     lexer->pos++;
   }
   num[len] = '\0';
-
-  lexer->pos += len;
   return num;
 }
 
@@ -231,7 +229,7 @@ Lexer *lex(char *source) {
 
     char ch = lex_ch(lexer);
     if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '=' ||
-        ch == 'n' || ch == ';' || ch == '.') {
+        ch == 'n' || ch == ';' || ch == '.' || ch == ',') {
       lex_add_tok(lexer, ch);
       lexer->pos++;
       continue;

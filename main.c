@@ -37,7 +37,7 @@ int main(int argc, const char *argv[]) {
   printf("ref2 = NULL;\n");
   ref_assign(&ref1, NULL);
 
-  Lexer *lexer = lex("type Person; a= 1.23; b = \"str\";");
+  Lexer *lexer = lex("type Person; p = Person(\"musou1500\", 24.0)");
   for (int i = 0; i < lexer->tokens->len; i++) {
     Token *tok = (Token *)lexer->tokens->data[i];
     switch (tok->type) {
