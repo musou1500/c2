@@ -1,6 +1,6 @@
+#include "./parse.h"
 #include "./lex.h"
 #include "./vec.h"
-#include "./parse.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -92,7 +92,8 @@ bool parser_is_ident_of(Parser *parser, char *ident) {
 }
 
 bool parser_is_end(Parser *parser) {
-  return parser->pos >= parser->lexer->tokens->len || parser->error != NULL || parser->lexer->error != NULL;
+  return parser->pos >= parser->lexer->tokens->len || parser->error != NULL ||
+         parser->lexer->error != NULL;
 }
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }
@@ -120,12 +121,12 @@ Node *parser_type_decl(Parser *parser) {
 }
 
 Node *parser_expr(Parser *parser);
-Vec *parser_args(Parser* parser) {
-  Vec *args = new_vec(); 
-   
+Vec *parser_args(Parser *parser) {
+  Vec *args = new_vec();
+
   do {
     Node *expr = parser_expr(parser);
-    if(expr == NULL) {
+    if (expr == NULL) {
       return NULL;
     }
 
@@ -134,7 +135,6 @@ Vec *parser_args(Parser* parser) {
 
   return args;
 }
-
 
 Node *parser_fn_call(Parser *parser) {
   // consume function name
@@ -148,9 +148,9 @@ Node *parser_fn_call(Parser *parser) {
 
   // consume "("
   parser->pos++;
-  Vec* args = parser_args(parser);
+  Vec *args = parser_args(parser);
 
-  if(args == NULL) {
+  if (args == NULL) {
     return NULL;
   }
 
@@ -204,8 +204,7 @@ Node *parser_expr(Parser *parser) {
     bool is_fn_call = parser_is_type(parser, '(');
     parser->pos--;
 
-    Node *node =
-      is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
+    Node *node = is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
     if (node != NULL) {
       return node;
     }

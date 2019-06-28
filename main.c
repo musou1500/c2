@@ -27,27 +27,27 @@ void print_node(Node *node, int ident) {
   }
 
   switch (node->type) {
-    case ND_FN_CALL:
-      printf("fn call %s\n", node->fn_call->name);
-      Vec *args = node->fn_call->args;
-      for (int i = 0; i < args->len; i++) {
-        Node *arg = (Node *)args->data[i];
-        print_node(arg, ident + 1);
-      }
-      break;
-    case ND_TYPE_DECL:
-      printf("ND_TYPE_DECL %s\n", node->type_decl->name);
-      break;
-    case ND_VAR_DECL:
-      printf("ND_VAR_DECL %s = \n", node->var_decl->name);
-      print_node(node->var_decl->expr, ident + 1);
-      break;
-    case ND_STRING_LIT:
-      printf("ND_STRING_LIT %s\n", node->str_lit);
-      break;
-    case ND_NUMBER_LIT:
-      printf("ND_NUMBER_LIT %f\n", node->num_lit);
-      break;
+  case ND_FN_CALL:
+    printf("fn call %s\n", node->fn_call->name);
+    Vec *args = node->fn_call->args;
+    for (int i = 0; i < args->len; i++) {
+      Node *arg = (Node *)args->data[i];
+      print_node(arg, ident + 1);
+    }
+    break;
+  case ND_TYPE_DECL:
+    printf("ND_TYPE_DECL %s\n", node->type_decl->name);
+    break;
+  case ND_VAR_DECL:
+    printf("ND_VAR_DECL %s = \n", node->var_decl->name);
+    print_node(node->var_decl->expr, ident + 1);
+    break;
+  case ND_STRING_LIT:
+    printf("ND_STRING_LIT %s\n", node->str_lit);
+    break;
+  case ND_NUMBER_LIT:
+    printf("ND_NUMBER_LIT %f\n", node->num_lit);
+    break;
   }
 }
 

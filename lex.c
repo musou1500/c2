@@ -1,10 +1,10 @@
 #include "./lex.h"
+#include <ctype.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <ctype.h>
 
 Token *new_tok(TokTy type, char *val) {
   Token *tok = (Token *)malloc(sizeof(Token));
@@ -31,9 +31,7 @@ Lexer *new_lexer(char *source) {
 
 char lex_ch(Lexer *lexer) { return lexer->source[lexer->pos]; }
 
-void lex_error(Lexer *lexer, char *message) {
-  lexer->error = message;
-}
+void lex_error(Lexer *lexer, char *message) { lexer->error = message; }
 
 bool is_wschar(char ch) {
   switch (ch) {
@@ -82,27 +80,37 @@ char lex_escape(Lexer *lexer) {
   lexer->pos++;
 
   char ch = lex_ch(lexer);
-  switch(ch) {
-    case '"':
-    case '\\':
-    case '/':
-      lexer->pos++;
-      return ch;
-    case 'b': lexer->pos++; return '\b';
-    case 'f': lexer->pos++; return '\f';
-    case 'n': lexer->pos++; return '\n';
-    case 'r': lexer->pos++; return '\r';
-    case 't': lexer->pos++; return '\t';
-    default:
-      lex_error(lexer, "unexpected token");
-      return '\0';
+  switch (ch) {
+  case '"':
+  case '\\':
+  case '/':
+    lexer->pos++;
+    return ch;
+  case 'b':
+    lexer->pos++;
+    return '\b';
+  case 'f':
+    lexer->pos++;
+    return '\f';
+  case 'n':
+    lexer->pos++;
+    return '\n';
+  case 'r':
+    lexer->pos++;
+    return '\r';
+  case 't':
+    lexer->pos++;
+    return '\t';
+  default:
+    lex_error(lexer, "unexpected token");
+    return '\0';
   }
 }
 
-char* lex_chars(Lexer *lexer) {
+char *lex_chars(Lexer *lexer) {
   int len = 0;
   int orig_pos = lexer->pos;
-  while(!lex_is_end(lexer)) {
+  while (!lex_is_end(lexer)) {
     char ch = lex_ch(lexer);
     if (ch == '\\') {
       len++;
@@ -204,7 +212,7 @@ double lex_number(Lexer *lexer) {
   return int_part + frac_part;
 }
 
-char* lex_string(Lexer *lexer) {
+char *lex_string(Lexer *lexer) {
   // consume "\""
   lexer->pos++;
   char *chars = lex_chars(lexer);
