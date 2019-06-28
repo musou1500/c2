@@ -38,8 +38,8 @@ int main(int argc, const char *argv[]) {
   ref_assign(&ref1, NULL);
 
   Lexer *lexer = lex("type Person; b = \"str\";");
-  for (int i = 0; i < lexer->tok_len; i++) {
-    Token *tok = lexer->tokens[i];
+  for (int i = 0; i < lexer->tokens->len; i++) {
+    Token *tok = (Token *)lexer->tokens->data[i];
     switch (tok->type) {
       case TK_IDENT:
         printf("TK_IDENT %s\n", tok->val);

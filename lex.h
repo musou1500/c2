@@ -2,6 +2,7 @@
 #define _LEX_H
 
 #include <stdbool.h>
+#include "./vec.h"
 #define MAX_TOKENS (255)
 
 typedef enum {
@@ -17,8 +18,7 @@ typedef struct {
 typedef struct {
   char *source;
   int pos;
-  Token *tokens[MAX_TOKENS];
-  int tok_len;
+  Vec *tokens;
   char *error;
 } Lexer;
 

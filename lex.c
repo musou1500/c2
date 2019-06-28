@@ -15,7 +15,7 @@ Lexer *new_lexer(char *source) {
   Lexer *lexer = (Lexer *)malloc(sizeof(Lexer));
   lexer->source = source;
   lexer->pos = 0;
-  lexer->tok_len = 0;
+  lexer->tokens = new_vec();
   lexer->error = NULL;
   return lexer;
 }
@@ -53,15 +53,15 @@ void lex_skipws(Lexer *lexer) {
 }
 
 void lex_add_tok(Lexer *lexer, int type) {
-  lexer->tokens[lexer->tok_len++] = new_tok(type, NULL);
+  vec_push(lexer->tokens, new_tok(type, NULL));
 }
 
 void lex_add_ident(Lexer *lexer, char *name) {
-  lexer->tokens[lexer->tok_len++] = new_tok(TK_IDENT, name);
+  vec_push(lexer->tokens, new_tok(TK_IDENT, name));
 }
 
 void lex_add_string(Lexer *lexer, char *str) {
-  lexer->tokens[lexer->tok_len++] = new_tok(TK_STRING, str);
+  vec_push(lexer->tokens, new_tok(TK_STRING, str));
 }
 
 char lex_escape(Lexer *lexer) {

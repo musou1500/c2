@@ -57,7 +57,9 @@ void parser_add_node(Parser *parser, Node *node) {
   vec_push(parser->nodes, node);
 }
 
-Token *parser_tok(Parser *parser) { return parser->lexer->tokens[parser->pos]; }
+Token *parser_tok(Parser *parser) {
+  return (Token *)parser->lexer->tokens->data[parser->pos];
+}
 
 bool parser_is_tok(Parser *parser, int type) {
   Token *tok = parser_tok(parser);
@@ -75,7 +77,7 @@ bool parser_is_ident_of(Parser *parser, char *ident) {
 }
 
 bool parser_is_end(Parser *parser) {
-  return parser->pos >= parser->lexer->tok_len || parser->error != NULL;
+  return parser->pos >= parser->lexer->tokens->len || parser->error != NULL;
 }
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }
