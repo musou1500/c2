@@ -8,7 +8,8 @@
 typedef enum {
   TK_STRING = 256,
   TK_IDENT,
-  TK_NUMBER
+  TK_NUMBER,
+  TK_EOF
 } TokTy;
 
 typedef struct {

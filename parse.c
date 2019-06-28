@@ -111,7 +111,7 @@ bool parser_has_error(Parser *parser) {
 }
 
 bool parser_is_end(Parser *parser) {
-  return parser->pos >= parser->lexer->tokens->len || parser_has_error(parser);
+  return parser_is_type(parser, TK_EOF) || parser_has_error(parser);
 }
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }

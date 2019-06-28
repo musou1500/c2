@@ -93,6 +93,9 @@ int main(int argc, const char *argv[]) {
     case TK_NUMBER:
       printf("TK_NUMBER %f\n", tok->n_val);
       break;
+    case TK_EOF:
+      printf("TK_EOF\n");
+      break;
     default:
       printf("CH %c\n", tok->type);
       break;

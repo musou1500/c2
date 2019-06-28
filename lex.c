@@ -278,5 +278,7 @@ Lexer *lex(char *source) {
     lex_add_ident(lexer, ident);
   }
 
+  lex_add_tok(lexer, TK_EOF);
+
   return lexer;
 }
