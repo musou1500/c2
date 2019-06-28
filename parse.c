@@ -10,16 +10,17 @@ TypeDecl *new_type_decl(char *name) {
   return type_decl;
 }
 
-FnCall *new_fn_call(char *name) {
+FnCall *new_fn_call(char *name, Vec *args) {
   FnCall *fn_call = (FnCall *)malloc(sizeof(FnCall));
   fn_call->name = name;
+  fn_call->args = args;
   return fn_call;
 }
 
-VarDecl *new_var_decl(char *name, char *ident) {
+VarDecl *new_var_decl(char *name, Node *expr) {
   VarDecl *var_decl = (VarDecl *)malloc(sizeof(VarDecl));
   var_decl->name = name;
-  var_decl->ident = ident;
+  var_decl->expr = expr;
   return var_decl;
 }
 
@@ -30,17 +31,31 @@ Node *new_type_decl_node(char *name) {
   return node;
 }
 
-Node *new_fn_call_node(char *name) {
+Node *new_fn_call_node(char *name, Vec *args) {
   Node *node = (Node *)malloc(sizeof(Node));
   node->type = ND_FN_CALL;
-  node->fn_call = new_fn_call(name);
+  node->fn_call = new_fn_call(name, args);
   return node;
 }
 
-Node *new_var_decl_node(char *name, char *ident) {
+Node *new_var_decl_node(char *name, Node *expr) {
   Node *node = (Node *)malloc(sizeof(Node));
   node->type = ND_VAR_DECL;
-  node->var_decl = new_var_decl(name, ident);
+  node->var_decl = new_var_decl(name, expr);
+  return node;
+}
+
+Node *new_str_lit_node(char *val) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_STRING_LIT;
+  node->str_lit = val;
+  return node;
+}
+
+Node *new_num_lit_node(double val) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_NUMBER_LIT;
+  node->num_lit = val;
   return node;
 }
 
@@ -61,7 +76,7 @@ Token *parser_tok(Parser *parser) {
   return (Token *)parser->lexer->tokens->data[parser->pos];
 }
 
-bool parser_is_tok(Parser *parser, int type) {
+bool parser_is_type(Parser *parser, int type) {
   Token *tok = parser_tok(parser);
   return tok->type == type;
 }
@@ -93,7 +108,7 @@ Node *parser_type_decl(Parser *parser) {
   Token *tk_ident = parser_tok(parser);
   parser->pos++;
 
-  if (!parser_is_tok(parser, ';')) {
+  if (!parser_is_type(parser, ';')) {
     parser_error(parser, "\";\" is expected after type declaration");
     return NULL;
   }
@@ -104,20 +119,42 @@ Node *parser_type_decl(Parser *parser) {
   return new_type_decl_node(tk_ident->val);
 }
 
+Node *parser_expr(Parser *parser);
+Vec *parser_args(Parser* parser) {
+  Vec *args = new_vec(); 
+   
+  do {
+    Node *expr = parser_expr(parser);
+    if(expr == NULL) {
+      return NULL;
+    }
+
+    vec_push(args, expr);
+  } while (parser_is_type(parser, ',') && parser->pos++);
+
+  return args;
+}
+
+
 Node *parser_fn_call(Parser *parser) {
   // consume function name
   Token *tk_ident = parser_tok(parser);
   parser->pos++;
 
-  if (!parser_is_tok(parser, '(')) {
+  if (!parser_is_type(parser, '(')) {
     parser_error(parser, "\"(\" is expcted after function name");
     return NULL;
   }
 
   // consume "("
   parser->pos++;
+  Vec* args = parser_args(parser);
 
-  if (!parser_is_tok(parser, ')')) {
+  if(args == NULL) {
+    return NULL;
+  }
+
+  if (!parser_is_type(parser, ')')) {
     parser_error(parser, "\")\" is expcted after argument list");
     return NULL;
   }
@@ -125,7 +162,7 @@ Node *parser_fn_call(Parser *parser) {
   // consume ")"
   parser->pos++;
 
-  return new_fn_call_node(tk_ident->val);
+  return new_fn_call_node(tk_ident->val, args);
 }
 
 Node *parser_var_decl(Parser *parser) {
@@ -133,7 +170,7 @@ Node *parser_var_decl(Parser *parser) {
   // consume ident
   parser->pos++;
 
-  if (!parser_is_tok(parser, '=')) {
+  if (!parser_is_type(parser, '=')) {
     parser_error(parser, "\"=\" is expcted after variable name");
     return NULL;
   }
@@ -146,13 +183,9 @@ Node *parser_var_decl(Parser *parser) {
     return NULL;
   }
 
-  // TODO: implement expression
-  Token *tk_ident_l = parser_tok(parser);
+  Node *expr = parser_expr(parser);
 
-  // consume ident
-  parser->pos++;
-
-  if (!parser_is_tok(parser, ';')) {
+  if (!parser_is_type(parser, ';')) {
     parser_error(parser, "\";\" is expcted after variable declaration");
     return NULL;
   }
@@ -160,7 +193,32 @@ Node *parser_var_decl(Parser *parser) {
   // consume ";"
   parser->pos++;
 
-  return new_var_decl_node(tk_ident->val, tk_ident_l->val);
+  return new_var_decl_node(tk_ident->val, expr);
+}
+
+Node *parser_expr(Parser *parser) {
+  Token *tok = parser_tok(parser);
+  if (parser_is_ident(parser)) {
+    // function call or variable declaration
+    parser->pos++;
+    bool is_fn_call = parser_is_type(parser, '(');
+    parser->pos--;
+
+    Node *node =
+      is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
+    if (node != NULL) {
+      return node;
+    }
+  } else if (parser_is_type(parser, TK_NUMBER)) {
+    parser->pos++;
+    return new_num_lit_node(tok->n_val);
+  } else if (parser_is_type(parser, TK_STRING)) {
+    parser->pos++;
+    return new_str_lit_node(tok->val);
+  }
+
+  parser_error(parser, "invalid expression");
+  return NULL;
 }
 
 Parser *parse(char *source) {
@@ -172,17 +230,9 @@ Parser *parse(char *source) {
       if (type_decl != NULL) {
         parser_add_node(parser, type_decl);
       }
-    } else if (parser_is_ident(parser)) {
-      // function call or variable declaration
-      parser->pos++;
-      bool is_fn_call = parser_is_tok(parser, '(');
-      parser->pos--;
-
-      Node *node =
-          is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
-      if (node != NULL) {
-        parser_add_node(parser, node);
-      }
+    } else {
+      Node *expr = parser_expr(parser);
+      parser_add_node(parser, expr);
     }
   }
 

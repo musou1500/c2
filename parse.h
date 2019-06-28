@@ -15,6 +15,8 @@ enum NodeType {
   ND_TYPE_DECL,
   ND_FN_CALL,
   ND_VAR_DECL,
+  ND_STRING_LIT,
+  ND_NUMBER_LIT,
 };
 
 typedef struct {
@@ -23,20 +25,25 @@ typedef struct {
 
 typedef struct {
   char *name;
+  Vec *args;
 } FnCall;
+
+struct Node;
 
 typedef struct {
   char *name;
-  char *ident;
+  struct Node *expr;
 } VarDecl;
 
-typedef struct {
+typedef struct Node {
   int type;
 
   union {
     TypeDecl *type_decl;
     FnCall *fn_call;
     VarDecl *var_decl;
+    char *str_lit;
+    double num_lit;
   };
 } Node;
 

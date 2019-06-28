@@ -224,8 +224,11 @@ char* lex_string(Lexer *lexer) {
 
 Lexer *lex(char *source) {
   Lexer *lexer = new_lexer(source);
-  while (!lex_is_end(lexer)) {
+  while (true) {
     lex_skipws(lexer);
+    if (lex_is_end(lexer)) {
+      break;
+    }
 
     char ch = lex_ch(lexer);
     if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '=' ||
