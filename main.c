@@ -37,7 +37,7 @@ int main(int argc, const char *argv[]) {
   printf("ref2 = NULL;\n");
   ref_assign(&ref1, NULL);
 
-  Lexer *lexer = lex("type Person; b = \"str\";");
+  Lexer *lexer = lex("type Person; a= 1.23; b = \"str\";");
   for (int i = 0; i < lexer->tokens->len; i++) {
     Token *tok = (Token *)lexer->tokens->data[i];
     switch (tok->type) {
@@ -46,6 +46,9 @@ int main(int argc, const char *argv[]) {
         break;
       case TK_STRING:
         printf("TK_STRING %s\n", tok->val);
+        break;
+      case TK_NUMBER:
+        printf("TK_NUMBER %f\n", tok->n_val);
         break;
       default:
         printf("CH %c\n", tok->type);

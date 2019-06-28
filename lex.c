@@ -3,11 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <ctype.h>
 
 Token *new_tok(TokTy type, char *val) {
   Token *tok = (Token *)malloc(sizeof(Token));
   tok->type = type;
   tok->val = val;
+  return tok;
+}
+
+Token *new_tok_number(TokTy type, double val) {
+  Token *tok = (Token *)malloc(sizeof(Token));
+  tok->type = type;
+  tok->n_val = val;
   return tok;
 }
 
@@ -64,6 +73,10 @@ void lex_add_string(Lexer *lexer, char *str) {
   vec_push(lexer->tokens, new_tok(TK_STRING, str));
 }
 
+void lex_add_number(Lexer *lexer, double number) {
+  vec_push(lexer->tokens, new_tok_number(TK_NUMBER, number));
+}
+
 char lex_escape(Lexer *lexer) {
   // consume "\"
   lexer->pos++;
@@ -118,6 +131,81 @@ char* lex_chars(Lexer *lexer) {
   return chars;
 }
 
+int lex_int(Lexer *lexer) {
+  char is_negative = lex_ch(lexer) == '-';
+  if (is_negative) {
+    lexer->pos++;
+  }
+
+  char fst_digit = lex_digit(lexer);
+  if (lex_is_end(lexer)) {
+    return -1;
+  }
+
+  if (fst_digit == '0') {
+    return 0;
+  }
+
+  // convert fstDigit + digits to int
+  char *digits = lex_digits(lexer);
+  char digits_len = strlen(digits);
+  int num = atoi(digits);
+  num += (fst_digit - '0') * pow(10.0, (double)digits_len);
+  return is_negative ? -num : num;
+}
+
+char *lex_digits(Lexer *lexer) {
+  int len = 0;
+  while (!lex_is_end(lexer)) {
+    if (isdigit(lex_ch(lexer))) {
+      lexer->pos++;
+      len++;
+    } else {
+      break;
+    }
+  }
+
+  char *num = (char *)malloc(sizeof(char) * len + 1);
+  lexer->pos -= len;
+  for (int i = 0; i < len; i++) {
+    num[i] = lex_ch(lexer);
+    lexer->pos++;
+  }
+  num[len] = '\0';
+
+  lexer->pos += len;
+  return num;
+}
+
+char lex_digit(Lexer *lexer) {
+  char ch = lex_ch(lexer);
+  if (isdigit(ch)) {
+    lexer->pos++;
+    return ch;
+  }
+
+  lex_error(lexer, "0-9 is expected");
+  return '\0';
+}
+
+double lex_frac(Lexer *lexer) {
+  if (lex_ch(lexer) == '.') {
+    lexer->pos++;
+    char *digits = lex_digits(lexer);
+    int exp = -strlen(digits);
+    return atoi(digits) * pow(10, exp);
+  } else {
+    return 0;
+  }
+}
+
+// TODO: return Number instead of double
+double lex_number(Lexer *lexer) {
+  int int_part = lex_int(lexer);
+  double frac_part = lex_frac(lexer);
+  return int_part + frac_part;
+}
+
 char* lex_string(Lexer *lexer) {
   // consume "\""
   lexer->pos++;
@@ -154,6 +242,13 @@ Lexer *lex(char *source) {
       if (str) {
         lex_add_string(lexer, str);
       }
+      continue;
+    }
+
+    if (ch == '-' || isdigit(ch)) {
+      // parse number
+      double number = lex_number(lexer);
+      lex_add_number(lexer, number);
       continue;
     }
 

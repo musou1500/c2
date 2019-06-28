@@ -3,7 +3,7 @@ SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
 refcount: $(OBJS) $(RT_OBJS)
-	gcc -o refcount $(CFLAGS) $(OBJS)
+	gcc -o refcount $(CFLAGS) $(OBJS) -lm
 
 clean:
 	rm -f *.o refcount
