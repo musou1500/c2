@@ -38,6 +38,8 @@ void ref_recycle(Ref *ref) {
     } else {
       free(ref->val);
     }
+
+    free(ref->count);
   }
 }
 
