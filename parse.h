@@ -3,6 +3,7 @@
 
 #include "./lex.h"
 #include "./vec.h"
+#include "./map.h"
 
 typedef struct {
   Lexer *lexer;
@@ -17,7 +18,13 @@ enum NodeType {
   ND_VAR_DECL,
   ND_STRING_LIT,
   ND_NUMBER_LIT,
+  ND_ALLOC_EXPR,
 };
+
+typedef struct {
+  char *name;
+  Map *inits;
+} AllocExpr;
 
 typedef struct {
   char *name;
@@ -42,6 +49,7 @@ typedef struct Node {
     TypeDecl *type_decl;
     FnCall *fn_call;
     VarDecl *var_decl;
+    AllocExpr *alloc_expr;
     char *str_lit;
     double num_lit;
   };

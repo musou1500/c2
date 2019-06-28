@@ -1,5 +1,6 @@
 #include "./parse.h"
 #include "./lex.h"
+#include "./map.h"
 #include "./vec.h"
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,13 @@ FnCall *new_fn_call(char *name, Vec *args) {
   fn_call->name = name;
   fn_call->args = args;
   return fn_call;
+}
+
+AllocExpr *new_alloc_expr(char *name, Map *inits) {
+  AllocExpr *alloc_expr = (AllocExpr *)malloc(sizeof(AllocExpr));
+  alloc_expr->name = name;
+  alloc_expr->inits = inits;
+  return alloc_expr;
 }
 
 VarDecl *new_var_decl(char *name, Node *expr) {
@@ -59,6 +67,13 @@ Node *new_num_lit_node(double val) {
   return node;
 }
 
+Node *new_alloc_expr_node(char *name, Map *inits) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_ALLOC_EXPR;
+  node->alloc_expr = new_alloc_expr(name, inits);
+  return node;
+}
+
 Parser *new_parser(Lexer *lexer) {
   Parser *parser = (Parser *)malloc(sizeof(Parser));
   parser->lexer = lexer;
@@ -91,12 +106,12 @@ bool parser_is_ident_of(Parser *parser, char *ident) {
   return tok->type == TK_IDENT && strcmp(tok->val, ident) == 0;
 }
 
-bool parser_is_end(Parser *parser) {
-  return parser->pos >= parser->lexer->tokens->len || parser_has_error(parser);
-}
-
 bool parser_has_error(Parser *parser) {
   return parser->error != NULL || parser->lexer->error != NULL;
+}
+
+bool parser_is_end(Parser *parser) {
+  return parser->pos >= parser->lexer->tokens->len || parser_has_error(parser);
 }
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }
@@ -199,18 +214,95 @@ Node *parser_var_decl(Parser *parser) {
   return new_var_decl_node(tk_ident->val, expr);
 }
 
+Map *parser_alloc_inits(Parser *parser) {
+  // consume "{"
+  parser->pos++;
+
+  Map *inits = new_map();
+
+  do {
+    if (!parser_is_type(parser, '.')) {
+      parser_error(parser, "\".\" is exptected before initializer");
+      return NULL;
+    }
+
+    // consume "."
+    parser->pos++;
+
+    if (!parser_is_ident(parser)) {
+      parser_error(parser, "identifier is exptected for lhs of initializer");
+      return NULL;
+    }
+
+    Token *ident_tok = parser_tok(parser);
+
+    // consume ident
+    parser->pos++;
+
+    if (!parser_is_type(parser, '=')) {
+      parser_error(parser,
+                   "\"=\" is exptected after field name of initializer");
+      return NULL;
+    }
+
+    // consume "="
+    parser->pos++;
+
+    Node *expr = parser_expr(parser);
+    if (expr == NULL) {
+      return NULL;
+    }
+
+    map_put(inits, ident_tok->val, expr);
+  } while (parser_is_type(parser, ',') && parser->pos++);
+
+  return inits;
+}
+
+Node *parser_alloc_expr(Parser *parser) {
+  // consume "alloc"
+  parser->pos++;
+
+  if (!parser_is_ident(parser)) {
+    parser_error(parser, "type name is expected after \"alloc\"");
+    return NULL;
+  }
+
+  Token *type_tok = parser_tok(parser);
+  parser->pos++;
+
+  if (!parser_is_type(parser, '{')) {
+    parser_error(parser, "\"{\" is expected after typename");
+    return NULL;
+  }
+
+  Map *inits = parser_alloc_inits(parser);
+  if (inits == NULL) {
+    return NULL;
+  }
+
+  if (!parser_is_type(parser, '}')) {
+    parser_error(parser, "\"}\" is expected after inits");
+    return NULL;
+  }
+
+  // consume "}"
+  parser->pos++;
+
+  return new_alloc_expr_node(type_tok->val, inits);
+}
+
 Node *parser_expr(Parser *parser) {
   Token *tok = parser_tok(parser);
-  if (parser_is_ident(parser)) {
+  if (parser_is_ident_of(parser, "alloc")) {
+    return parser_alloc_expr(parser);
+  } else if (parser_is_ident(parser)) {
     // function call or variable declaration
     parser->pos++;
     bool is_fn_call = parser_is_type(parser, '(');
     parser->pos--;
 
-    Node *node = is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
-    if (node != NULL) {
-      return node;
-    }
+    return is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
   } else if (parser_is_type(parser, TK_NUMBER)) {
     parser->pos++;
     return new_num_lit_node(tok->n_val);
@@ -235,7 +327,9 @@ Parser *parse(char *source) {
       }
     } else {
       Node *expr = parser_expr(parser);
-      parser_add_node(parser, expr);
+      if (expr != NULL) {
+        parser_add_node(parser, expr);
+      }
     }
   }
 

@@ -21,8 +21,8 @@ void person_destruct(void *p) {
   free(p);
 }
 
-void print_node(Node *node, int ident) {
-  for (int i = 0; i < ident; i++) {
+void print_node(Node *node, int indent) {
+  for (int i = 0; i < indent; i++) {
     printf("  ");
   }
 
@@ -32,7 +32,7 @@ void print_node(Node *node, int ident) {
     Vec *args = node->fn_call->args;
     for (int i = 0; i < args->len; i++) {
       Node *arg = (Node *)args->data[i];
-      print_node(arg, ident + 1);
+      print_node(arg, indent + 1);
     }
     break;
   case ND_TYPE_DECL:
@@ -40,13 +40,23 @@ void print_node(Node *node, int ident) {
     break;
   case ND_VAR_DECL:
     printf("ND_VAR_DECL %s = \n", node->var_decl->name);
-    print_node(node->var_decl->expr, ident + 1);
+    print_node(node->var_decl->expr, indent + 1);
     break;
   case ND_STRING_LIT:
     printf("ND_STRING_LIT %s\n", node->str_lit);
     break;
   case ND_NUMBER_LIT:
     printf("ND_NUMBER_LIT %f\n", node->num_lit);
+    break;
+  case ND_ALLOC_EXPR:
+    printf("ND_ALLOC_EXPR %s\n", node->alloc_expr->name);
+    Map *inits = node->alloc_expr->inits;
+    for(int i = 0; i < inits->keys->len; i++) {
+      char *key = (char *)inits->keys->data[i];
+      Node *expr = (Node *)map_get(inits, key);
+      printf("  .%s =\n", key);
+      print_node(expr, indent + 2);
+    }
     break;
   }
 }
@@ -68,7 +78,27 @@ int main(int argc, const char *argv[]) {
   /* printf("ref2 = NULL;\n"); */
   /* ref_assign(&ref1, NULL); */
   /* printf("\n\n"); */
-  char *source = "type Person;\np = Person(\"musou1500\", 24.0);";
+  char *source =
+      "type Person;\np = alloc Person { .name = \"musou1500\", .age = 24.0 };";
+  Lexer *lexer = lex(source);
+  for (int i = 0; i < lexer->tokens->len; i++) {
+    Token *tok = (Token *)lexer->tokens->data[i];
+    switch (tok->type) {
+    case TK_IDENT:
+      printf("TK_IDENT %s\n", tok->val);
+      break;
+    case TK_STRING:
+      printf("TK_STRING %s\n", tok->val);
+      break;
+    case TK_NUMBER:
+      printf("TK_NUMBER %f\n", tok->n_val);
+      break;
+    default:
+      printf("CH %c\n", tok->type);
+      break;
+    }
+  }
+
   printf("source:\n%s\n\n", source);
   Parser *parser = parse(source);
   if (parser->error != NULL) {
