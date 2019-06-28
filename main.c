@@ -70,32 +70,6 @@ int main(int argc, const char *argv[]) {
   /* printf("\n\n"); */
   char *source = "type Person;\np = Person(\"musou1500\", 24.0);";
   printf("source:\n%s\n\n", source);
-  Lexer *lexer = lex(source);
-  if (lexer->error != NULL) {
-    printf("lexer error: %s\n", lexer->error);
-    return 1;
-  }
-
-  printf("tokens: ");
-  for (int i = 0; i < lexer->tokens->len; i++) {
-    Token *tok = (Token *)lexer->tokens->data[i];
-    switch (tok->type) {
-      case TK_IDENT:
-        printf("TK_IDENT %s, ", tok->val);
-        break;
-      case TK_STRING:
-        printf("TK_STRING %s, ", tok->val);
-        break;
-      case TK_NUMBER:
-        printf("TK_NUMBER %f, ", tok->n_val);
-        break;
-      default:
-        printf("CH \"%c\", ", tok->type);
-        break;
-    }
-  }
-  printf("\n\n");
-  
   Parser *parser = parse(source);
   if (parser->error != NULL) {
     printf("parser error: %d %s\n", parser->pos, parser->error);

@@ -59,9 +59,9 @@ Node *new_num_lit_node(double val) {
   return node;
 }
 
-Parser *new_parser(char *source) {
+Parser *new_parser(Lexer *lexer) {
   Parser *parser = (Parser *)malloc(sizeof(Parser));
-  parser->lexer = lex(source);
+  parser->lexer = lexer;
   parser->pos = 0;
   parser->error = NULL;
   parser->nodes = new_vec();
@@ -92,7 +92,7 @@ bool parser_is_ident_of(Parser *parser, char *ident) {
 }
 
 bool parser_is_end(Parser *parser) {
-  return parser->pos >= parser->lexer->tokens->len || parser->error != NULL;
+  return parser->pos >= parser->lexer->tokens->len || parser->error != NULL || parser->lexer->error != NULL;
 }
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }
@@ -222,7 +222,8 @@ Node *parser_expr(Parser *parser) {
 }
 
 Parser *parse(char *source) {
-  Parser *parser = new_parser(source);
+  Lexer *lexer = lex(source);
+  Parser *parser = new_parser(lexer);
   while (!parser_is_end(parser)) {
     if (parser_is_ident_of(parser, "type")) {
       // type declaration
