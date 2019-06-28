@@ -1,8 +1,12 @@
+#ifndef _LEX_H
+#define _LEX_H
+
 #include <stdbool.h>
 #define MAX_TOKENS (255)
 
 typedef enum {
-  TK_IDENT = 256,
+  TK_STRING = 256,
+  TK_IDENT,
 } TokTy;
 
 typedef struct {
@@ -26,4 +30,7 @@ void lex_skipws(Lexer *lexer);
 bool lex_forward_if(Lexer* lexer, char *name);
 void lex_add_tok(Lexer* lexer, int type);
 void lex_add_ident(Lexer* lexer, char *name);
+void lex_add_string(Lexer *lexer, char *str);
 Lexer *lex(char *source);
+
+#endif

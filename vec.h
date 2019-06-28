@@ -1,3 +1,7 @@
+#ifndef _VEC_H
+#define _VEC_H
+
+
 typedef struct {
   void **data;
   int capacity;
@@ -5,3 +9,4 @@ typedef struct {
 } Vec;
 Vec *new_vec();
 void vec_push(Vec *vec, void* elem);
+#endif

@@ -1,3 +1,6 @@
+#ifndef _PARSE_H
+#define _PARSE_H
+
 #include "./lex.h"
 #include "./vec.h"
 
@@ -38,3 +41,5 @@ typedef struct {
 } Node;
 
 Parser *parse(char *source);
+
+#endif

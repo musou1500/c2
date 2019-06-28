@@ -25,25 +25,37 @@ int main(int argc, const char *argv[]) {
   init_refs();
 
   Person* p1 = new_person("musou1500", 24);
-  Ref ref1 = {
-    .value = p1,
-    .refcount = 0,
-    .destruct = person_destruct
-  };
+  Ref ref1 = new_ref(p1, person_destruct);
   refs_add(&ref1);
-  ref_assign(NULL, &ref1);
 
   Person* p2 = new_person("musou1501", 24);
-  Ref ref2 = {
-    .value = p2,
-    .refcount = 0,
-    .destruct = person_destruct
-  };
+  Ref ref2 = new_ref(p2, person_destruct);
   refs_add(&ref2);
-  ref_assign(NULL, &ref2);
-
-  // ここで p2 は開放される
+  
+  printf("ref2 = ref1;\n");
   ref_assign(&ref2, &ref1);
+  
+  printf("ref1 = NULL;\n");
+  ref_assign(&ref1, NULL);
+
+  printf("ref2 = NULL;\n");
+  ref_assign(&ref1, NULL);
+
+  Lexer *lexer = lex("type Person; b = \"str\";");
+  for (int i = 0; i < lexer->tok_len; i++) {
+    Token *tok = lexer->tokens[i];
+    switch (tok->type) {
+      case TK_IDENT:
+        printf("TK_IDENT %s\n", tok->val);
+        break;
+      case TK_STRING:
+        printf("TK_STRING %s\n", tok->val);
+        break;
+      default:
+        printf("CH %c\n", tok->type);
+        break;
+    }
+  }
 
   Parser *parser = parse("type Person; a = b;");
   if (parser->error != NULL) {

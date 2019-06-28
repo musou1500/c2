@@ -1,5 +1,6 @@
 #include "./lex.h"
 #include "./vec.h"
+#include "./parse.h"
 #include <stdlib.h>
 #include <string.h>
 
