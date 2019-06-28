@@ -25,6 +25,14 @@ AllocExpr *new_alloc_expr(char *name, Map *inits) {
   return alloc_expr;
 }
 
+AllocArrayExpr *new_alloc_array_expr(char *name, Node *size_expr) {
+  AllocArrayExpr *alloc_array_expr =
+      (AllocArrayExpr *)malloc(sizeof(AllocArrayExpr));
+  alloc_array_expr->name = name;
+  alloc_array_expr->size_expr = size_expr;
+  return alloc_array_expr;
+}
+
 VarDecl *new_var_decl(char *name, Node *expr) {
   VarDecl *var_decl = (VarDecl *)malloc(sizeof(VarDecl));
   var_decl->name = name;
@@ -71,6 +79,13 @@ Node *new_alloc_expr_node(char *name, Map *inits) {
   Node *node = (Node *)malloc(sizeof(Node));
   node->type = ND_ALLOC_EXPR;
   node->alloc_expr = new_alloc_expr(name, inits);
+  return node;
+}
+
+Node *new_alloc_array_expr_node(char *name, Node *size_expr) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_ALLOC_ARRAY_EXPR;
+  node->alloc_array_expr = new_alloc_array_expr(name, size_expr);
   return node;
 }
 
@@ -196,11 +211,6 @@ Node *parser_var_decl(Parser *parser) {
   // consume "="
   parser->pos++;
 
-  if (!parser_is_ident(parser)) {
-    parser_error(parser, "identifier is expcted after \"=\"");
-    return NULL;
-  }
-
   Node *expr = parser_expr(parser);
 
   if (!parser_is_type(parser, ';')) {
@@ -271,6 +281,24 @@ Node *parser_alloc_expr(Parser *parser) {
   Token *type_tok = parser_tok(parser);
   parser->pos++;
 
+  // alloc array expr
+  if (parser_is_type(parser, '[')) {
+    parser->pos++;
+    Node *size_expr = parser_expr(parser);
+    if (size_expr == NULL) {
+      return NULL;
+    }
+
+    if (!parser_is_type(parser, ']')) {
+      parser_error(parser, "\"]\" is expected after size of alloc array expr");
+      return NULL;
+    }
+
+    parser->pos++;
+
+    return new_alloc_array_expr_node(type_tok->val, size_expr);
+  }
+
   if (!parser_is_type(parser, '{')) {
     parser_error(parser, "\"{\" is expected after typename");
     return NULL;
@@ -299,10 +327,14 @@ Node *parser_expr(Parser *parser) {
   } else if (parser_is_ident(parser)) {
     // function call or variable declaration
     parser->pos++;
-    bool is_fn_call = parser_is_type(parser, '(');
+    if (!parser_is_type(parser, '(')) {
+      parser_error(parser, "\"(\" is expected after identifier");
+      return NULL;
+    }
     parser->pos--;
 
-    return is_fn_call ? parser_fn_call(parser) : parser_var_decl(parser);
+    // TODO: implement identifier as expression
+    return parser_fn_call(parser);
   } else if (parser_is_type(parser, TK_NUMBER)) {
     parser->pos++;
     return new_num_lit_node(tok->n_val);
@@ -319,7 +351,13 @@ Parser *parse(char *source) {
   Lexer *lexer = lex(source);
   Parser *parser = new_parser(lexer);
   while (!parser_is_end(parser)) {
-    if (parser_is_ident_of(parser, "type")) {
+    if (parser_is_ident_of(parser, "var")) {
+      parser->pos++;
+      Node *var_decl = parser_var_decl(parser);
+      if (var_decl != NULL) {
+        parser_add_node(parser, var_decl);
+      }
+    } else if (parser_is_ident_of(parser, "type")) {
       // type declaration
       Node *type_decl = parser_type_decl(parser);
       if (type_decl != NULL) {

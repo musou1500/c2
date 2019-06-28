@@ -240,7 +240,7 @@ Lexer *lex(char *source) {
 
     char ch = lex_ch(lexer);
     if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '=' ||
-        ch == ';' || ch == '.' || ch == ',') {
+        ch == ';' || ch == '.' || ch == ',' || ch == '[' || ch == ']') {
       lex_add_tok(lexer, ch);
       lexer->pos++;
       continue;

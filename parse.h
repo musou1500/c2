@@ -19,12 +19,19 @@ enum NodeType {
   ND_STRING_LIT,
   ND_NUMBER_LIT,
   ND_ALLOC_EXPR,
+  ND_ALLOC_ARRAY_EXPR,
 };
 
+struct Node;
 typedef struct {
   char *name;
   Map *inits;
 } AllocExpr;
+
+typedef struct {
+  char *name;
+  struct Node *size_expr;
+} AllocArrayExpr;
 
 typedef struct {
   char *name;
@@ -34,8 +41,6 @@ typedef struct {
   char *name;
   Vec *args;
 } FnCall;
-
-struct Node;
 
 typedef struct {
   char *name;
@@ -50,6 +55,7 @@ typedef struct Node {
     FnCall *fn_call;
     VarDecl *var_decl;
     AllocExpr *alloc_expr;
+    AllocArrayExpr *alloc_array_expr;
     char *str_lit;
     double num_lit;
   };

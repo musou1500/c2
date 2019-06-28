@@ -51,12 +51,16 @@ void print_node(Node *node, int indent) {
   case ND_ALLOC_EXPR:
     printf("ND_ALLOC_EXPR %s\n", node->alloc_expr->name);
     Map *inits = node->alloc_expr->inits;
-    for(int i = 0; i < inits->keys->len; i++) {
+    for (int i = 0; i < inits->keys->len; i++) {
       char *key = (char *)inits->keys->data[i];
       Node *expr = (Node *)map_get(inits, key);
       printf("  .%s =\n", key);
       print_node(expr, indent + 2);
     }
+    break;
+  case ND_ALLOC_ARRAY_EXPR:
+    printf("ND_ALLOC_ARRAY_EXPR %s\n", node->alloc_array_expr->name);
+    print_node(node->alloc_array_expr->size_expr, indent + 1);
     break;
   }
 }
@@ -78,29 +82,29 @@ int main(int argc, const char *argv[]) {
   /* printf("ref2 = NULL;\n"); */
   /* ref_assign(&ref1, NULL); */
   /* printf("\n\n"); */
-  char *source =
-      "type Person;\np = alloc Person { .name = \"musou1500\", .age = 24.0 };";
-  Lexer *lexer = lex(source);
-  for (int i = 0; i < lexer->tokens->len; i++) {
-    Token *tok = (Token *)lexer->tokens->data[i];
-    switch (tok->type) {
-    case TK_IDENT:
-      printf("TK_IDENT %s\n", tok->val);
-      break;
-    case TK_STRING:
-      printf("TK_STRING %s\n", tok->val);
-      break;
-    case TK_NUMBER:
-      printf("TK_NUMBER %f\n", tok->n_val);
-      break;
-    case TK_EOF:
-      printf("TK_EOF\n");
-      break;
-    default:
-      printf("CH %c\n", tok->type);
-      break;
-    }
-  }
+  char *source = "type Person;\nvar arr = alloc char[5];\nvar p = alloc Person "
+                 "{ .name = \"musou1500\", .age = 24.0 };";
+  /* Lexer *lexer = lex(source); */
+  /* for (int i = 0; i < lexer->tokens->len; i++) { */
+  /* Token *tok = (Token *)lexer->tokens->data[i]; */
+  /* switch (tok->type) { */
+  /* case TK_IDENT: */
+  /* printf("TK_IDENT %s\n", tok->val); */
+  /* break; */
+  /* case TK_STRING: */
+  /* printf("TK_STRING %s\n", tok->val); */
+  /* break; */
+  /* case TK_NUMBER: */
+  /* printf("TK_NUMBER %f\n", tok->n_val); */
+  /* break; */
+  /* case TK_EOF: */
+  /* printf("TK_EOF\n"); */
+  /* break; */
+  /* default: */
+  /* printf("CH %c\n", tok->type); */
+  /* break; */
+  /* } */
+  /* } */
 
   printf("source:\n%s\n\n", source);
   Parser *parser = parse(source);
