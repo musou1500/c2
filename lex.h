@@ -19,6 +19,7 @@ typedef struct {
   int pos;
   Token *tokens[MAX_TOKENS];
   int tok_len;
+  char *error;
 } Lexer;
 
 Token *new_tok(TokTy type, char *val);
@@ -27,7 +28,6 @@ char lex_ch(Lexer *lexer);
 bool is_wschar(char ch);
 bool lex_is_end(Lexer* lexer);
 void lex_skipws(Lexer *lexer);
-bool lex_forward_if(Lexer* lexer, char *name);
 void lex_add_tok(Lexer* lexer, int type);
 void lex_add_ident(Lexer* lexer, char *name);
 void lex_add_string(Lexer *lexer, char *str);

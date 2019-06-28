@@ -16,10 +16,15 @@ Lexer *new_lexer(char *source) {
   lexer->source = source;
   lexer->pos = 0;
   lexer->tok_len = 0;
+  lexer->error = NULL;
   return lexer;
 }
 
 char lex_ch(Lexer *lexer) { return lexer->source[lexer->pos]; }
+
+void lex_error(Lexer *lexer, char *message) {
+  lexer->error = message;
+}
 
 bool is_wschar(char ch) {
   switch (ch) {
@@ -37,26 +42,13 @@ bool is_ident_char(char ch) {
   return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_';
 }
 
-bool lex_is_end(Lexer *lexer) { return strlen(lexer->source) <= lexer->pos; }
+bool lex_is_end(Lexer *lexer) {
+  return strlen(lexer->source) <= lexer->pos || lexer->error != NULL;
+}
 
 void lex_skipws(Lexer *lexer) {
   while (is_wschar(lex_ch(lexer)) && !lex_is_end(lexer)) {
     lexer->pos++;
-  }
-}
-
-bool lex_forward_if(Lexer *lexer, char *name) {
-  int orig_pos = lexer->pos;
-  while (*name == lex_ch(lexer)) {
-    lexer->pos++;
-    name++;
-  }
-
-  if (*name == '\0') {
-    return true;
-  } else {
-    lexer->pos = orig_pos;
-    return false;
   }
 }
 
@@ -89,8 +81,8 @@ char lex_escape(Lexer *lexer) {
     case 'r': lexer->pos++; return '\r';
     case 't': lexer->pos++; return '\t';
     default:
-      // error
-      break;
+      lex_error(lexer, "unexpected token");
+      return '\0';
   }
 }
 
@@ -112,7 +104,7 @@ char* lex_chars(Lexer *lexer) {
 
   lexer->pos = orig_pos;
   char *chars = (char *)malloc(sizeof(char) * len + 1);
-  for (int i = 0; i < len; i++) {
+  for (int i = 0; i < len && !lex_is_end(lexer); i++) {
     char ch = lex_ch(lexer);
     if (ch == '\\') {
       chars[i] = lex_escape(lexer);
@@ -130,13 +122,18 @@ char* lex_string(Lexer *lexer) {
   // consume "\""
   lexer->pos++;
   char *chars = lex_chars(lexer);
+  if (lex_is_end(lexer)) {
+    return NULL;
+  }
+
   char ch = lex_ch(lexer);
   if (ch == '\"') {
     lexer->pos++;
     return chars;
   }
 
-  // error
+  lex_error(lexer, "\" is ecpected at end of string literal");
+  return NULL;
 }
 
 Lexer *lex(char *source) {
@@ -154,7 +151,9 @@ Lexer *lex(char *source) {
 
     if (ch == '"') {
       char *str = lex_string(lexer);
-      lex_add_string(lexer, str);
+      if (str) {
+        lex_add_string(lexer, str);
+      }
       continue;
     }
 
