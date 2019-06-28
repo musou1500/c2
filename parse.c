@@ -92,8 +92,11 @@ bool parser_is_ident_of(Parser *parser, char *ident) {
 }
 
 bool parser_is_end(Parser *parser) {
-  return parser->pos >= parser->lexer->tokens->len || parser->error != NULL ||
-         parser->lexer->error != NULL;
+  return parser->pos >= parser->lexer->tokens->len || parser_has_error(parser);
+}
+
+bool parser_has_error(Parser *parser) {
+  return parser->error != NULL || parser->lexer->error != NULL;
 }
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }
