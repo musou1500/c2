@@ -3,48 +3,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-Refs *refs;
-Refs *new_refs() {
-  Refs *refs = (Refs *)malloc(sizeof(Refs));
-  refs->next = NULL;
-  refs->val = NULL;
-  return refs;
-}
-
-void init_refs() { refs = new_refs(); }
-
-Refs *refs_get_last() {
-  while (refs->next != NULL) {
-    refs = refs->next;
-  }
-
-  return refs;
-}
-
-size_t refs_len() {
-  size_t len = 0;
-  while (refs->next != NULL) {
-    refs = refs->next;
-    len++;
-  }
-
-  return len;
-}
-
-void refs_add(Ref *ref) {
-  Refs *last = refs_get_last(refs);
-  last->next = new_refs();
-  last->next->val = ref;
-}
-
-void refs_destruct() {
-  while (refs->next != NULL) {
-    Refs *next = refs->next;
-    free(refs);
-    refs = next;
-  }
-}
-
 RefCount* new_ref_count(int count) {
   RefCount* ref_count = (RefCount *)malloc(sizeof(RefCount));
   ref_count->count = count;
