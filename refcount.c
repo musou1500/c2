@@ -33,7 +33,11 @@ bool ref_has_no_ref(Ref *ref) {
 
 void ref_recycle(Ref *ref) {
   if (ref != NULL && ref_has_no_ref(ref)) {
-    ref->destruct(ref->val);
+    if (ref->destruct != NULL) {
+      ref->destruct(ref->val);
+    } else {
+      free(ref->val);
+    }
   }
 }
 
