@@ -51,9 +51,7 @@ bool is_ident_char(char ch) {
   return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_';
 }
 
-bool lex_has_error(Lexer *lexer) {
-  return lexer->error != NULL;
-}
+bool lex_has_error(Lexer *lexer) { return lexer->error != NULL; }
 
 bool lex_is_end(Lexer *lexer) {
   return strlen(lexer->source) <= lexer->pos || lex_has_error(lexer);
@@ -123,12 +121,12 @@ char *lex_chars(Lexer *lexer) {
     if (ch == '\n') {
       break;
     }
-    
+
     // end of string literal
     if (ch == '\"') {
       break;
     }
-    
+
     // escape sequence or normal char
     if (ch == '\\') {
       len++;
@@ -304,13 +302,13 @@ void lex_print_excerpt(Lexer *lexer, int pos) {
   int start_pos = pos;
   do {
     start_pos--;
-  } while(start_pos > 0 && lexer->source[start_pos] != '\n');
-  
+  } while (start_pos > 0 && lexer->source[start_pos] != '\n');
+
   int end_pos = pos;
-  while(end_pos < strlen(lexer->source) && lexer->source[end_pos] != '\n') {
+  while (end_pos < strlen(lexer->source) && lexer->source[end_pos] != '\n') {
     end_pos++;
   }
-  
+
   // create excerpt
   int excerpt_len = end_pos - start_pos + 1;
   char excerpt[excerpt_len];

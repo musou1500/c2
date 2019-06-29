@@ -2,8 +2,8 @@
 #include "./lex.h"
 #include "./map.h"
 #include "./vec.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 TypeDecl *new_type_decl(char *name) {
@@ -190,7 +190,7 @@ Node *parser_fn_call(Parser *parser) {
   if (parser_has_error(parser)) {
     return NULL;
   }
-  
+
   if (!parser_is_type(parser, ')')) {
     parser_error(parser, "\")\" is expected after argument list");
     return NULL;
