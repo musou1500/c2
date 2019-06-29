@@ -65,7 +65,7 @@ void print_node(Node *node, int indent) {
   }
 }
 
-int main(int argc, const char *argv[]) {
+int main(int argc, char *argv[]) {
   /* printf("gc:") */
   /* Person* p1 = new_person("musou1500", 24); */
   /* Ref ref1 = new_ref(p1, person_destruct); */
@@ -82,34 +82,12 @@ int main(int argc, const char *argv[]) {
   /* printf("ref2 = NULL;\n"); */
   /* ref_assign(&ref1, NULL); */
   /* printf("\n\n"); */
-  char *source = "type Person;\nvar arr = alloc char[5];\nvar p = alloc Person "
-                 "{ .name = \"musou1500\", .age = 24.0 };";
-  /* Lexer *lexer = lex(source); */
-  /* for (int i = 0; i < lexer->tokens->len; i++) { */
-  /* Token *tok = (Token *)lexer->tokens->data[i]; */
-  /* switch (tok->type) { */
-  /* case TK_IDENT: */
-  /* printf("TK_IDENT %s\n", tok->val); */
-  /* break; */
-  /* case TK_STRING: */
-  /* printf("TK_STRING %s\n", tok->val); */
-  /* break; */
-  /* case TK_NUMBER: */
-  /* printf("TK_NUMBER %f\n", tok->n_val); */
-  /* break; */
-  /* case TK_EOF: */
-  /* printf("TK_EOF\n"); */
-  /* break; */
-  /* default: */
-  /* printf("CH %c\n", tok->type); */
-  /* break; */
-  /* } */
-  /* } */
-
+  char *source = argv[1];
   printf("source:\n%s\n\n", source);
+
   Parser *parser = parse(source);
-  if (parser->error != NULL) {
-    printf("parser error: %d %s\n", parser->pos, parser->error);
+  if (parser_has_error(parser)) {
+    parser_print_error(parser);
     return 1;
   }
 

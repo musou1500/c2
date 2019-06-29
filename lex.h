@@ -18,6 +18,8 @@ typedef struct {
     char *val;
     double n_val;
   };
+
+  int pos;
 } Token;
 
 typedef struct {
@@ -27,12 +29,13 @@ typedef struct {
   char *error;
 } Lexer;
 
-Token *new_tok(TokTy type, char *val);
-Token *new_tok_number(TokTy type, double val);
+Token *new_tok(TokTy type, char *val, int pos);
+Token *new_tok_number(TokTy type, double val, int pos);
 Lexer *new_lexer(char *source);
 char lex_ch(Lexer *lexer);
 bool is_wschar(char ch);
 bool lex_is_end(Lexer* lexer);
+bool lex_is_ok(Lexer* lexer);
 void lex_skipws(Lexer *lexer);
 void lex_add_tok(Lexer* lexer, int type);
 void lex_add_ident(Lexer* lexer, char *name);
@@ -44,5 +47,8 @@ char lex_digit(Lexer *lexer);
 double lex_frac(Lexer *lexer);
 double lex_number(Lexer *lexer);
 Lexer *lex(char *source);
+bool lex_has_error(Lexer *lexer);
+void lex_print_error(Lexer *lexer);
+void lex_print_excerpt(Lexer *lexer, int pos);
 
 #endif

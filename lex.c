@@ -6,17 +6,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-Token *new_tok(TokTy type, char *val) {
+Token *new_tok(TokTy type, char *val, int pos) {
   Token *tok = (Token *)malloc(sizeof(Token));
   tok->type = type;
   tok->val = val;
+  tok->pos = pos;
   return tok;
 }
 
-Token *new_tok_number(TokTy type, double val) {
+Token *new_tok_number(TokTy type, double val, int pos) {
   Token *tok = (Token *)malloc(sizeof(Token));
   tok->type = type;
   tok->n_val = val;
+  tok->pos = pos;
   return tok;
 }
 
@@ -49,8 +51,12 @@ bool is_ident_char(char ch) {
   return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_';
 }
 
+bool lex_has_error(Lexer *lexer) {
+  return lexer->error != NULL;
+}
+
 bool lex_is_end(Lexer *lexer) {
-  return strlen(lexer->source) <= lexer->pos || lexer->error != NULL;
+  return strlen(lexer->source) <= lexer->pos || lex_has_error(lexer);
 }
 
 void lex_skipws(Lexer *lexer) {
@@ -60,19 +66,19 @@ void lex_skipws(Lexer *lexer) {
 }
 
 void lex_add_tok(Lexer *lexer, int type) {
-  vec_push(lexer->tokens, new_tok(type, NULL));
+  vec_push(lexer->tokens, new_tok(type, NULL, lexer->pos));
 }
 
 void lex_add_ident(Lexer *lexer, char *name) {
-  vec_push(lexer->tokens, new_tok(TK_IDENT, name));
+  vec_push(lexer->tokens, new_tok(TK_IDENT, name, lexer->pos));
 }
 
 void lex_add_string(Lexer *lexer, char *str) {
-  vec_push(lexer->tokens, new_tok(TK_STRING, str));
+  vec_push(lexer->tokens, new_tok(TK_STRING, str, lexer->pos));
 }
 
 void lex_add_number(Lexer *lexer, double number) {
-  vec_push(lexer->tokens, new_tok_number(TK_NUMBER, number));
+  vec_push(lexer->tokens, new_tok_number(TK_NUMBER, number, lexer->pos));
 }
 
 char lex_escape(Lexer *lexer) {
@@ -112,14 +118,24 @@ char *lex_chars(Lexer *lexer) {
   int orig_pos = lexer->pos;
   while (!lex_is_end(lexer)) {
     char ch = lex_ch(lexer);
+
+    // shoule close double quote before newline
+    if (ch == '\n') {
+      break;
+    }
+    
+    // end of string literal
+    if (ch == '\"') {
+      break;
+    }
+    
+    // escape sequence or normal char
     if (ch == '\\') {
       len++;
       lexer->pos += 2;
-    } else if (ch != '\"') {
+    } else {
       len++;
       lexer->pos++;
-    } else {
-      break;
     }
   }
 
@@ -226,7 +242,7 @@ char *lex_string(Lexer *lexer) {
     return chars;
   }
 
-  lex_error(lexer, "\" is ecpected at end of string literal");
+  lex_error(lexer, "\" is expected at end of string literal");
   return NULL;
 }
 
@@ -281,4 +297,39 @@ Lexer *lex(char *source) {
   lex_add_tok(lexer, TK_EOF);
 
   return lexer;
+}
+
+void lex_print_excerpt(Lexer *lexer, int pos) {
+  // find nearest newline
+  int start_pos = pos;
+  do {
+    start_pos--;
+  } while(start_pos > 0 && lexer->source[start_pos] != '\n');
+
+  int end_pos = pos;
+  do {
+    end_pos++;
+  } while(end_pos < strlen(lexer->source) && lexer->source[end_pos] != '\n');
+  int excerpt_len = end_pos - start_pos + 1;
+  char excerpt[excerpt_len];
+  for (int i = 0; i < excerpt_len - 1; i++) {
+    excerpt[i] = lexer->source[start_pos + i];
+  }
+  excerpt[excerpt_len - 1] = '\0';
+  printf("%s\n", excerpt);
+
+  int offset = pos - start_pos;
+  for (int i = 0; i < offset; i++) {
+    printf(" ");
+  }
+  printf("^ error!\n");
+}
+
+void lex_print_error(Lexer *lexer) {
+  if (!lex_has_error(lexer)) {
+    return;
+  }
+
+  printf("Lexer error: %s %d\n", lexer->error, lexer->pos);
+  lex_print_excerpt(lexer, lexer->pos);
 }

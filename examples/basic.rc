@@ -1,0 +1,6 @@
+var arr = alloc char[5];
+var p = alloc Person {
+  .name = "musou1500",
+  .age = 24
+};
+

@@ -62,5 +62,8 @@ typedef struct Node {
 } Node;
 
 Parser *parse(char *source);
+bool parser_has_error(Parser *parser);
+void parser_print_error(Parser *parser);
+
 
 #endif

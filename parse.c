@@ -3,6 +3,7 @@
 #include "./map.h"
 #include "./vec.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 TypeDecl *new_type_decl(char *name) {
@@ -122,7 +123,7 @@ bool parser_is_ident_of(Parser *parser, char *ident) {
 }
 
 bool parser_has_error(Parser *parser) {
-  return parser->error != NULL || parser->lexer->error != NULL;
+  return parser->error != NULL || lex_has_error(parser->lexer);
 }
 
 bool parser_is_end(Parser *parser) {
@@ -212,7 +213,6 @@ Node *parser_var_decl(Parser *parser) {
   parser->pos++;
 
   Node *expr = parser_expr(parser);
-
   if (!parser_is_type(parser, ';')) {
     parser_error(parser, "\";\" is expcted after variable declaration");
     return NULL;
@@ -372,4 +372,19 @@ Parser *parse(char *source) {
   }
 
   return parser;
+}
+
+void parser_print_error(Parser *parser) {
+  if (!parser_has_error(parser)) {
+    return;
+  }
+
+  if (lex_has_error(parser->lexer)) {
+    lex_print_error(parser->lexer);
+  } else {
+    // TODO: implement printing parser error
+    Token *tok = parser_tok(parser);
+    printf("Parser error: %s %d\n", parser->error, tok->pos);
+    lex_print_excerpt(parser->lexer, tok->pos);
+  }
 }
