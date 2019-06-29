@@ -143,14 +143,6 @@ Node *parser_type_decl(Parser *parser) {
   Token *tk_ident = parser_tok(parser);
   parser->pos++;
 
-  if (!parser_is_type(parser, ';')) {
-    parser_error(parser, "\";\" is expected after type declaration");
-    return NULL;
-  }
-
-  // consume ";"
-  parser->pos++;
-
   return new_type_decl_node(tk_ident->val);
 }
 
@@ -203,6 +195,8 @@ Node *parser_fn_call(Parser *parser) {
 }
 
 Node *parser_var_decl(Parser *parser) {
+  // consume "var"
+  parser->pos++;
   Token *tk_ident = parser_tok(parser);
   // consume ident
   parser->pos++;
@@ -219,14 +213,6 @@ Node *parser_var_decl(Parser *parser) {
   if (parser_has_error(parser)) {
     return NULL;
   }
-
-  if (!parser_is_type(parser, ';')) {
-    parser_error(parser, "\";\" is expected after variable declaration");
-    return NULL;
-  }
-
-  // consume ";"
-  parser->pos++;
 
   return new_var_decl_node(tk_ident->val, expr);
 }
@@ -354,27 +340,33 @@ Node *parser_expr(Parser *parser) {
   return NULL;
 }
 
+Node *parser_stmt(Parser *parser) {
+  Node *stmt;
+  if (parser_is_ident_of(parser, "var")) {
+    stmt = parser_var_decl(parser);
+  } else if (parser_is_ident_of(parser, "type")) {
+    stmt = parser_type_decl(parser);
+  } else {
+    stmt = parser_expr(parser);
+  }
+
+  if (!parser_is_type(parser, ';')) {
+    parser_error(parser, "\";\" is expected after statement");
+    return NULL;
+  }
+
+  // consume ";"
+  parser->pos++;
+  return stmt;
+}
+
 Parser *parse(char *source) {
   Lexer *lexer = lex(source);
   Parser *parser = new_parser(lexer);
   while (!parser_is_end(parser)) {
-    if (parser_is_ident_of(parser, "var")) {
-      parser->pos++;
-      Node *var_decl = parser_var_decl(parser);
-      if (var_decl != NULL) {
-        parser_add_node(parser, var_decl);
-      }
-    } else if (parser_is_ident_of(parser, "type")) {
-      // type declaration
-      Node *type_decl = parser_type_decl(parser);
-      if (type_decl != NULL) {
-        parser_add_node(parser, type_decl);
-      }
-    } else {
-      Node *expr = parser_expr(parser);
-      if (!parser_has_error(parser)) {
-        parser_add_node(parser, expr);
-      }
+    Node *stmt = parser_stmt(parser);
+    if (stmt != NULL) {
+      parser_add_node(stmt);
     }
   }
 
