@@ -189,7 +189,7 @@ Node *parser_fn_call(Parser *parser) {
   }
 
   if (!parser_is_type(parser, ')')) {
-    parser_error(parser, "\")\" is expcted after argument list");
+    parser_error(parser, "\")\" is expected after argument list");
     return NULL;
   }
 
@@ -205,7 +205,7 @@ Node *parser_var_decl(Parser *parser) {
   parser->pos++;
 
   if (!parser_is_type(parser, '=')) {
-    parser_error(parser, "\"=\" is expcted after variable name");
+    parser_error(parser, "\"=\" is expected after variable name");
     return NULL;
   }
 
@@ -214,7 +214,7 @@ Node *parser_var_decl(Parser *parser) {
 
   Node *expr = parser_expr(parser);
   if (!parser_is_type(parser, ';')) {
-    parser_error(parser, "\";\" is expcted after variable declaration");
+    parser_error(parser, "\";\" is expected after variable declaration");
     return NULL;
   }
 
@@ -232,7 +232,7 @@ Map *parser_alloc_inits(Parser *parser) {
 
   do {
     if (!parser_is_type(parser, '.')) {
-      parser_error(parser, "\".\" is exptected before initializer");
+      parser_error(parser, "\".\" is expetected before initializer");
       return NULL;
     }
 
@@ -240,7 +240,7 @@ Map *parser_alloc_inits(Parser *parser) {
     parser->pos++;
 
     if (!parser_is_ident(parser)) {
-      parser_error(parser, "identifier is exptected for lhs of initializer");
+      parser_error(parser, "identifier is expetected for lhs of initializer");
       return NULL;
     }
 
