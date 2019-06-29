@@ -253,16 +253,85 @@ Lexer *lex(char *source) {
     }
 
     char ch = lex_ch(lexer);
-    if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '=' ||
-        ch == ';' || ch == '.' || ch == ',' || ch == '[' || ch == ']') {
+    if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == ';' ||
+        ch == '.' || ch == ',' || ch == '[' || ch == ']' || ch == '+' ||
+        ch == '-' || ch == '/' || ch == '*') {
       lex_add_tok(lexer, ch);
       lexer->pos++;
       continue;
     }
 
+    if (ch == '!') {
+      lexer->pos++;
+      char next_ch = lex_ch(lexer);
+      if (next_ch == '=') {
+        lexer->pos++;
+        lex_add_tok(lexer, TK_NEQ);
+      } else {
+        lex_add_tok(lexer, '!');
+      }
+
+      continue;
+    }
+
+    if (ch == '<') {
+      lexer->pos++;
+      char next_ch = lex_ch(lexer);
+      if (next_ch == '=') {
+        lexer->pos++;
+        lex_add_tok(lexer, TK_LTE);
+      } else {
+        lex_add_tok(lexer, '<');
+      }
+
+      continue;
+    }
+
+    if (ch == '>') {
+      lexer->pos++;
+      char next_ch = lex_ch(lexer);
+      if (next_ch == '=') {
+        lexer->pos++;
+        lex_add_tok(lexer, TK_GTE);
+      } else {
+        lex_add_tok(lexer, '>');
+      }
+
+      continue;
+    }
+
+    if (ch == '=') {
+      lexer->pos++;
+      char next_ch = lex_ch(lexer);
+      if (ch == next_ch) {
+        lexer->pos++;
+        lex_add_tok(lexer, TK_EQ);
+      } else {
+        lex_add_tok(lexer, '=');
+      }
+
+      continue;
+    }
+
+    if (ch == '&' || ch == '|') {
+      lexer->pos++;
+      char next_ch = lex_ch(lexer);
+      if (ch == next_ch) {
+        lexer->pos++;
+        lex_add_tok(lexer, ch == '&' ? TK_LOGICAL_AND : TK_LOGICAL_OR);
+      } else {
+        if (ch == '&') {
+          lex_error(lexer, "& is expected after &");
+        } else {
+          lex_error(lexer, "| is expected after |");
+        }
+      }
+      continue;
+    }
+
     if (ch == '"') {
       char *str = lex_string(lexer);
-      if (str) {
+      if (!lex_has_error(lexer)) {
         lex_add_string(lexer, str);
       }
       continue;
@@ -275,21 +344,29 @@ Lexer *lex(char *source) {
       continue;
     }
 
-    int len = 0;
-    while (!is_wschar(lex_ch(lexer)) && is_ident_char(lex_ch(lexer))) {
-      len++;
-      lexer->pos++;
-    }
-    lexer->pos -= len;
+    if (is_ident_char(ch)) {
+      int len = 0;
+      char ident_ch = lex_ch(lexer);
+      while (!is_wschar(ident_ch) &&
+             (is_ident_char(ident_ch) || isdigit(ident_ch))) {
+        len++;
+        lexer->pos++;
+        ident_ch = lex_ch(lexer);
+      }
+      lexer->pos -= len;
 
-    char *ident = (char *)malloc(sizeof(char) * len + 1);
-    for (int i = 0; i < len; i++) {
-      ident[i] = lex_ch(lexer);
-      lexer->pos++;
+      char *ident = (char *)malloc(sizeof(char) * len + 1);
+      for (int i = 0; i < len; i++) {
+        ident[i] = lex_ch(lexer);
+        lexer->pos++;
+      }
+
+      ident[len] = '\0';
+      lex_add_ident(lexer, ident);
+      continue;
     }
 
-    ident[len] = '\0';
-    lex_add_ident(lexer, ident);
+    lex_error(lexer, "unexpected char");
   }
 
   lex_add_tok(lexer, TK_EOF);

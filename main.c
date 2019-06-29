@@ -22,13 +22,21 @@ void person_destruct(void *p) {
 }
 
 void print_node(Node *node, int indent) {
-  for (int i = 0; i < indent; i++) {
-    printf("  ");
+  
+  int indent_str_len = indent * 2;
+  char indent_str[indent_str_len + 1];
+  for (int i = 0; i < indent_str_len; i++) {
+    indent_str[i] = ' ';
   }
+  indent_str[indent_str_len] = '\0';
+  printf("%s", indent_str);
 
   switch (node->type) {
+  case ND_IDENT:
+    printf("ND_IDENT %s\n", node->ident);
+    break;
   case ND_FN_CALL:
-    printf("fn call %s\n", node->fn_call->name);
+    printf("ND_FN_CALL %s\n", node->fn_call->name);
     Vec *args = node->fn_call->args;
     for (int i = 0; i < args->len; i++) {
       Node *arg = (Node *)args->data[i];
@@ -54,7 +62,7 @@ void print_node(Node *node, int indent) {
     for (int i = 0; i < inits->keys->len; i++) {
       char *key = (char *)inits->keys->data[i];
       Node *expr = (Node *)map_get(inits, key);
-      printf("  .%s =\n", key);
+      printf("%s  .%s = \n", indent_str, key);
       print_node(expr, indent + 2);
     }
     break;
@@ -62,26 +70,37 @@ void print_node(Node *node, int indent) {
     printf("ND_ALLOC_ARRAY_EXPR %s\n", node->alloc_array_expr->name);
     print_node(node->alloc_array_expr->size_expr, indent + 1);
     break;
+  case ND_BINOP_EXPR:
+    printf("ND_BINOP_EXPR ");
+    switch (node->binop_expr->type) {
+    case BO_EQ:
+      printf("==\n");
+      break;
+    case BO_NEQ:
+      printf("!=\n");
+      break;
+    case BO_LTE:
+      printf("<\n");
+      break;
+    case BO_GTE:
+      printf(">\n");
+      break;
+    case BO_LOGICAL_AND:
+      printf("&&\n");
+      break;
+    case BO_LOGICAL_OR:
+      printf("||\n");
+      break;
+    default:
+      printf("%c\n", (char)node->binop_expr->type);
+    }
+    print_node(node->binop_expr->lhs, indent + 1);
+    print_node(node->binop_expr->rhs, indent + 1);
   }
 }
 
 int main(int argc, char *argv[]) {
-  /* printf("gc:") */
-  /* Person* p1 = new_person("musou1500", 24); */
-  /* Ref ref1 = new_ref(p1, person_destruct); */
 
-  /* Person* p2 = new_person("musou1501", 24); */
-  /* Ref ref2 = new_ref(p2, person_destruct); */
-
-  /* printf("ref2 = ref1;\n"); */
-  /* ref_assign(&ref2, &ref1); */
-
-  /* printf("ref1 = NULL;\n"); */
-  /* ref_assign(&ref1, NULL); */
-
-  /* printf("ref2 = NULL;\n"); */
-  /* ref_assign(&ref1, NULL); */
-  /* printf("\n\n"); */
   char *source = argv[1];
   printf("source:\n%s\n\n", source);
 

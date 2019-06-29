@@ -41,6 +41,14 @@ VarDecl *new_var_decl(char *name, Node *expr) {
   return var_decl;
 }
 
+BinopExpr *new_binop_expr(int type, Node *lhs, Node *rhs) {
+  BinopExpr *binop_expr = (BinopExpr *)malloc(sizeof(BinopExpr));
+  binop_expr->type = type;
+  binop_expr->lhs = lhs;
+  binop_expr->rhs = rhs;
+  return binop_expr;
+}
+
 Node *new_type_decl_node(char *name) {
   Node *node = (Node *)malloc(sizeof(Node));
   node->type = ND_TYPE_DECL;
@@ -90,6 +98,20 @@ Node *new_alloc_array_expr_node(char *name, Node *size_expr) {
   return node;
 }
 
+Node *new_binop_expr_node(int type, Node *lhs, Node *rhs) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_BINOP_EXPR;
+  node->binop_expr = new_binop_expr(type, lhs, rhs);
+  return node;
+}
+
+Node *new_ident_node(char *name) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_IDENT;
+  node->ident = name;
+  return node;
+}
+
 Parser *new_parser(Lexer *lexer) {
   Parser *parser = (Parser *)malloc(sizeof(Parser));
   parser->lexer = lexer;
@@ -107,19 +129,19 @@ Token *parser_tok(Parser *parser) {
   return (Token *)parser->lexer->tokens->data[parser->pos];
 }
 
+bool tok_is_type(Token *tok, int type) { return tok->type == type; }
+
 bool parser_is_type(Parser *parser, int type) {
-  Token *tok = parser_tok(parser);
-  return tok->type == type;
+  return tok_is_type(parser_tok(parser), type);
 }
 
 bool parser_is_ident(Parser *parser) {
-  Token *tok = parser_tok(parser);
-  return tok->type == TK_IDENT;
+  return tok_is_type(parser_tok(parser), TK_IDENT);
 }
 
 bool parser_is_ident_of(Parser *parser, char *ident) {
   Token *tok = parser_tok(parser);
-  return tok->type == TK_IDENT && strcmp(tok->val, ident) == 0;
+  return tok_is_type(tok, TK_IDENT) && strcmp(tok->val, ident) == 0;
 }
 
 bool parser_has_error(Parser *parser) {
@@ -313,22 +335,29 @@ Node *parser_alloc_expr(Parser *parser) {
   return new_alloc_expr_node(type_tok->val, inits);
 }
 
-Node *parser_expr(Parser *parser) {
+Node *parser_term(Parser *parser) {
   Token *tok = parser_tok(parser);
+
+  // alloc expr
   if (parser_is_ident_of(parser, "alloc")) {
     return parser_alloc_expr(parser);
-  } else if (parser_is_ident(parser)) {
-    // function call or variable declaration
-    parser->pos++;
-    if (!parser_is_type(parser, '(')) {
-      parser_error(parser, "\"(\" is expected after identifier");
-      return NULL;
-    }
-    parser->pos--;
+  }
 
-    // TODO: implement identifier as expression
-    return parser_fn_call(parser);
-  } else if (parser_is_type(parser, TK_NUMBER)) {
+  // function call or identifier
+  if (parser_is_ident(parser)) {
+    parser->pos++;
+    Token *next_tok = parser_tok(parser);
+    parser->pos--;
+    if (tok_is_type(next_tok, '(')) {
+      return parser_fn_call(parser);
+    } else {
+      parser->pos++;
+      return new_ident_node(tok->val);
+    }
+  }
+
+  // literal
+  if (parser_is_type(parser, TK_NUMBER)) {
     parser->pos++;
     return new_num_lit_node(tok->n_val);
   } else if (parser_is_type(parser, TK_STRING)) {
@@ -336,8 +365,111 @@ Node *parser_expr(Parser *parser) {
     return new_str_lit_node(tok->val);
   }
 
-  parser_error(parser, "invalid expression");
+  if (parser_is_type(parser, '(')) {
+    parser->pos++;
+    Node *node = parser_expr(parser);
+    if (!parser_is_type(parser, ')')) {
+      parser_error(parser, "parentheses is not closed");
+      return NULL;
+    }
+
+    parser->pos++;
+    return node;
+  }
+
+  parser_error(parser, "unexpected token");
   return NULL;
+}
+
+Node *parser_mult_div(Parser *parser) {
+  Node *lhs = parser_term(parser);
+
+  if (parser_is_type(parser, '*')) {
+    parser->pos++;
+    return new_binop_expr_node('*', lhs, parser_mult_div(parser));
+  }
+
+  if (parser_is_type(parser, '/')) {
+    parser->pos++;
+    return new_binop_expr_node('/', lhs, parser_mult_div(parser));
+  }
+
+  return lhs;
+}
+
+Node *parser_add_sub(Parser *parser) {
+  Node *lhs = parser_mult_div(parser);
+  if (parser_is_type(parser, '+')) {
+    parser->pos++;
+    return new_binop_expr_node('+', lhs, parser_add_sub(parser));
+  }
+
+  if (parser_is_type(parser, '-')) {
+    parser->pos++;
+    return new_binop_expr_node('-', lhs, parser_add_sub(parser));
+  }
+
+  return lhs;
+}
+
+Node *parser_cmp(Parser *parser) {
+  Node *lhs = parser_add_sub(parser);
+
+  if (parser_is_type(parser, TK_NEQ)) {
+    parser->pos++;
+    return new_binop_expr_node(BO_NEQ, lhs, parser_cmp(parser));
+  }
+
+  if (parser_is_type(parser, TK_EQ)) {
+    parser->pos++;
+    return new_binop_expr_node(BO_EQ, lhs, parser_cmp(parser));
+  }
+
+  if (parser_is_type(parser, '>')) {
+    parser->pos++;
+    return new_binop_expr_node('>', lhs, parser_cmp(parser));
+  }
+
+  if (parser_is_type(parser, TK_GTE)) {
+    parser->pos++;
+    return new_binop_expr_node(BO_GTE, lhs, parser_cmp(parser));
+  }
+
+  if (parser_is_type(parser, '<')) {
+    parser->pos++;
+    return new_binop_expr_node('<', lhs, parser_cmp(parser));
+  }
+
+  if (parser_is_type(parser, TK_LTE)) {
+    parser->pos++;
+    return new_binop_expr_node(BO_LTE, lhs, parser_cmp(parser));
+  }
+
+  return lhs;
+}
+
+// logical_and: parser_cmp logical_and'
+// logical_and': ε | "&&" logical
+Node *parser_logical_and(Parser *parser) {
+  Node *lhs = parser_cmp(parser);
+  if (parser_is_type(parser, TK_LOGICAL_AND)) {
+    parser->pos++;
+    return new_binop_expr_node(BO_LOGICAL_AND, lhs, parser_expr(parser));
+  }
+
+  return lhs;
+}
+
+// logical: logical_and logical'
+// logical': ε | "||" logical_and
+Node *parser_expr(Parser *parser) {
+  Node *lhs = parser_logical_and(parser);
+  if (parser_is_type(parser, TK_LOGICAL_OR)) {
+    parser->pos++;
+    return new_binop_expr_node(BO_LOGICAL_OR, lhs, parser_logical_and(parser));
+  }
+
+  return lhs;
 }
 
 Node *parser_stmt(Parser *parser) {
@@ -366,7 +498,7 @@ Parser *parse(char *source) {
   while (!parser_is_end(parser)) {
     Node *stmt = parser_stmt(parser);
     if (stmt != NULL) {
-      parser_add_node(stmt);
+      parser_add_node(parser, stmt);
     }
   }
 

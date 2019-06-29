@@ -12,6 +12,15 @@ typedef struct {
   char *error;
 } Parser;
 
+enum BinopType {
+  BO_LOGICAL_OR = 256,
+  BO_LOGICAL_AND,
+  BO_EQ,
+  BO_NEQ,
+  BO_LTE,
+  BO_GTE,
+};
+
 enum NodeType {
   ND_TYPE_DECL,
   ND_FN_CALL,
@@ -20,9 +29,18 @@ enum NodeType {
   ND_NUMBER_LIT,
   ND_ALLOC_EXPR,
   ND_ALLOC_ARRAY_EXPR,
+  ND_BINOP_EXPR,
+  ND_IDENT,
 };
 
 struct Node;
+
+typedef struct {
+  int type;
+  struct Node *lhs;
+  struct Node *rhs;
+} BinopExpr;
+
 typedef struct {
   char *name;
   Map *inits;
@@ -56,8 +74,10 @@ typedef struct Node {
     VarDecl *var_decl;
     AllocExpr *alloc_expr;
     AllocArrayExpr *alloc_array_expr;
+    BinopExpr *binop_expr;
     char *str_lit;
     double num_lit;
+    char *ident;
   };
 } Node;
 

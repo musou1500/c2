@@ -9,6 +9,12 @@ typedef enum {
   TK_STRING = 256,
   TK_IDENT,
   TK_NUMBER,
+  TK_LOGICAL_OR,
+  TK_LOGICAL_AND,
+  TK_EQ,
+  TK_NEQ,
+  TK_GTE,
+  TK_LTE,
   TK_EOF
 } TokTy;
 
