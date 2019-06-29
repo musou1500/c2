@@ -158,6 +158,10 @@ Node *parser_expr(Parser *parser);
 Vec *parser_args(Parser *parser) {
   Vec *args = new_vec();
 
+  if (parser_is_type(parser, ')')) {
+    return args;
+  }
+
   do {
     Node *expr = parser_expr(parser);
     if (expr == NULL) {
@@ -166,7 +170,6 @@ Vec *parser_args(Parser *parser) {
 
     vec_push(args, expr);
   } while (parser_is_type(parser, ',') && parser->pos++);
-
   return args;
 }
 
@@ -184,10 +187,10 @@ Node *parser_fn_call(Parser *parser) {
   parser->pos++;
   Vec *args = parser_args(parser);
 
-  if (args == NULL) {
+  if (parser_has_error(parser)) {
     return NULL;
   }
-
+  
   if (!parser_is_type(parser, ')')) {
     parser_error(parser, "\")\" is expected after argument list");
     return NULL;
@@ -213,6 +216,10 @@ Node *parser_var_decl(Parser *parser) {
   parser->pos++;
 
   Node *expr = parser_expr(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
+
   if (!parser_is_type(parser, ';')) {
     parser_error(parser, "\";\" is expected after variable declaration");
     return NULL;
@@ -259,7 +266,7 @@ Map *parser_alloc_inits(Parser *parser) {
     parser->pos++;
 
     Node *expr = parser_expr(parser);
-    if (expr == NULL) {
+    if (parser_has_error(parser)) {
       return NULL;
     }
 
@@ -285,7 +292,7 @@ Node *parser_alloc_expr(Parser *parser) {
   if (parser_is_type(parser, '[')) {
     parser->pos++;
     Node *size_expr = parser_expr(parser);
-    if (size_expr == NULL) {
+    if (parser_has_error(parser)) {
       return NULL;
     }
 
@@ -365,7 +372,7 @@ Parser *parse(char *source) {
       }
     } else {
       Node *expr = parser_expr(parser);
-      if (expr != NULL) {
+      if (!parser_has_error(parser)) {
         parser_add_node(parser, expr);
       }
     }
@@ -384,7 +391,7 @@ void parser_print_error(Parser *parser) {
   } else {
     // TODO: implement printing parser error
     Token *tok = parser_tok(parser);
-    printf("Parser error: %s %d\n", parser->error, tok->pos);
+    printf("Parser error: %s\n", parser->error);
     lex_print_excerpt(parser->lexer, tok->pos);
   }
 }

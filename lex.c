@@ -162,7 +162,7 @@ int lex_int(Lexer *lexer) {
   }
 
   char fst_digit = lex_digit(lexer);
-  if (lex_is_end(lexer)) {
+  if (lex_has_error(lexer)) {
     return -1;
   }
 
@@ -170,11 +170,11 @@ int lex_int(Lexer *lexer) {
     return 0;
   }
 
-  // convert fstDigit + digits to int
+  // convert fst_digit + digits to int
   char *digits = lex_digits(lexer);
   char digits_len = strlen(digits);
   int num = atoi(digits);
-  num += (fst_digit - '0') * pow(10.0, (double)digits_len);
+  num += (fst_digit - '0') * pow(10.0, digits_len);
   return is_negative ? -num : num;
 }
 
@@ -232,7 +232,7 @@ char *lex_string(Lexer *lexer) {
   // consume "\""
   lexer->pos++;
   char *chars = lex_chars(lexer);
-  if (lex_is_end(lexer)) {
+  if (lex_has_error(lexer)) {
     return NULL;
   }
 
@@ -305,19 +305,21 @@ void lex_print_excerpt(Lexer *lexer, int pos) {
   do {
     start_pos--;
   } while(start_pos > 0 && lexer->source[start_pos] != '\n');
-
+  
   int end_pos = pos;
-  do {
+  while(end_pos < strlen(lexer->source) && lexer->source[end_pos] != '\n') {
     end_pos++;
-  } while(end_pos < strlen(lexer->source) && lexer->source[end_pos] != '\n');
+  }
+  
+  // create excerpt
   int excerpt_len = end_pos - start_pos + 1;
   char excerpt[excerpt_len];
   for (int i = 0; i < excerpt_len - 1; i++) {
     excerpt[i] = lexer->source[start_pos + i];
   }
   excerpt[excerpt_len - 1] = '\0';
-  printf("%s\n", excerpt);
 
+  printf("%s\n", excerpt);
   int offset = pos - start_pos;
   for (int i = 0; i < offset; i++) {
     printf(" ");
@@ -330,6 +332,6 @@ void lex_print_error(Lexer *lexer) {
     return;
   }
 
-  printf("Lexer error: %s %d\n", lexer->error, lexer->pos);
+  printf("Lexer error: %s\n", lexer->error);
   lex_print_excerpt(lexer, lexer->pos);
 }
