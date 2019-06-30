@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
   Parser *parser = parse(source);
   if (parser_has_error(parser)) {
     parser_print_error(parser);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   Vec *nodes = parser->nodes;
@@ -116,5 +116,6 @@ int main(int argc, char *argv[]) {
     Node *node = (Node *)nodes->data[i];
     print_node(node, 0);
   }
-  return 0;
+
+  return EXIT_SUCCESS;
 }
