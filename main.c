@@ -91,7 +91,8 @@ void print_node(Node *node, int indent) {
     break;
   case ND_BINOP_EXPR:
     printf("ND_BINOP_EXPR ");
-    switch (node->binop_expr->type) {
+    int op_type = node->binop_expr->type;
+    switch (op_type) {
     case BO_EQ:
       printf("==\n");
       break;
@@ -109,6 +110,9 @@ void print_node(Node *node, int indent) {
       break;
     case BO_LOGICAL_OR:
       printf("||\n");
+      break;
+    case BO_INDEX:
+      printf("[]\n");
       break;
     default:
       printf("%c\n", (char)node->binop_expr->type);

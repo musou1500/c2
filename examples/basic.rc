@@ -1,4 +1,5 @@
 var arr: [char] = new char[5];
+var fst: char = arr[0];
 var p = new Person {
   .name = "musou1500",
   .age = 24

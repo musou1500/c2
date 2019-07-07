@@ -10,6 +10,7 @@ enum BinopType {
   BO_NEQ,
   BO_LTE,
   BO_GTE,
+  BO_INDEX
 };
 
 enum NodeType {

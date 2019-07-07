@@ -302,10 +302,11 @@ Node *parser_term(Parser *parser) {
     parser->pos--;
     if (tok_is_type(next_tok, '(')) {
       return parser_fn_call(parser);
-    } else {
-      parser->pos++;
-      return new_ident_node(tok->val);
     }
+    
+    // consume ident
+    parser->pos++;
+    return new_ident_node(tok->val);
   }
 
   // literal
@@ -333,8 +334,29 @@ Node *parser_term(Parser *parser) {
   return NULL;
 }
 
-Node *parser_mult_div(Parser *parser) {
+Node *parser_index(Parser *parser) {
   Node *lhs = parser_term(parser);
+  if (parser_is_type(parser, '[')) {
+    parser->pos++;
+    Node *rhs = parser_expr(parser);
+
+    if (!parser_is_type(parser, ']')) {
+      parser_error(parser, "\"]\" is expected");
+      return NULL;
+    }
+
+    parser->pos++;
+    return new_binop_expr_node(BO_INDEX, lhs, rhs);
+  }
+
+  return lhs;
+}
+
+Node *parser_mult_div(Parser *parser) {
+  Node *lhs = parser_index(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
 
   if (parser_is_type(parser, '*')) {
     parser->pos++;
@@ -351,6 +373,10 @@ Node *parser_mult_div(Parser *parser) {
 
 Node *parser_add_sub(Parser *parser) {
   Node *lhs = parser_mult_div(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
+
   if (parser_is_type(parser, '+')) {
     parser->pos++;
     return new_binop_expr_node('+', lhs, parser_add_sub(parser));
@@ -366,6 +392,9 @@ Node *parser_add_sub(Parser *parser) {
 
 Node *parser_cmp(Parser *parser) {
   Node *lhs = parser_add_sub(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
 
   if (parser_is_type(parser, TK_NEQ)) {
     parser->pos++;
@@ -404,6 +433,10 @@ Node *parser_cmp(Parser *parser) {
 // logical_and': ε | "&&" logical
 Node *parser_logical_and(Parser *parser) {
   Node *lhs = parser_cmp(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
+
   if (parser_is_type(parser, TK_LOGICAL_AND)) {
     parser->pos++;
     return new_binop_expr_node(BO_LOGICAL_AND, lhs, parser_expr(parser));
@@ -416,6 +449,10 @@ Node *parser_logical_and(Parser *parser) {
 // logical': ε | "||" logical_and
 Node *parser_expr(Parser *parser) {
   Node *lhs = parser_logical_and(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
+
   if (parser_is_type(parser, TK_LOGICAL_OR)) {
     parser->pos++;
     return new_binop_expr_node(BO_LOGICAL_OR, lhs, parser_logical_and(parser));
@@ -432,6 +469,10 @@ Node *parser_stmt(Parser *parser) {
     stmt = parser_type_decl(parser);
   } else {
     stmt = parser_expr(parser);
+  }
+
+  if (parser_has_error(parser)) {
+    return NULL;
   }
 
   if (!parser_is_type(parser, ';')) {
