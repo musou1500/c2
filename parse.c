@@ -111,12 +111,67 @@ Node *parser_fn_call(Parser *parser) {
   return new_fn_call_node(tk_ident->val, args);
 }
 
+TypeSpec *parser_type_spec(Parser *parser) {
+  // parse array type spec
+  if (parser_is_type(parser, '[')) {
+    // consume ']'
+    parser->pos++;
+    TypeSpec *elem_type_spec = parser_type_spec(parser);
+    if (parser_has_error(parser)) {
+      return NULL;
+    }
+
+    if (!parser_is_type(parser, ']')) {
+      parser_error(parser, "\"]\" is expected after array type specifier");
+      return NULL;
+    }
+    
+    // consume ']'
+    parser->pos++;
+    Vec *type_params = new_vec();
+    vec_push(type_params, elem_type_spec);
+    return new_type_spec("array", type_params);
+  }
+
+  if (parser_is_ident(parser)) {
+    Token *tok = parser_tok(parser);
+    parser->pos++;
+    char *name = tok->val;
+    Vec *type_params = new_vec();
+    if (parser_is_type(parser, '<')) {
+      parser->pos++;
+
+      // TODO: implement parsing type params
+      if (parser_is_type(parser, '>')) {
+        parser_error(parser, "\">\" is expected after type params");
+        return NULL;
+      }
+      parser->pos++;
+    }
+
+    return new_type_spec(name, type_params);
+  }
+
+  parser_error(parser, "unexpected token");
+  return NULL;
+}
+
 Node *parser_var_decl(Parser *parser) {
   // consume "var"
   parser->pos++;
   Token *tk_ident = parser_tok(parser);
   // consume ident
   parser->pos++;
+  
+  TypeSpec *type_spec = NULL;
+  if (parser_is_type(parser, ':')) {
+    // consume ':'
+    parser->pos++;
+    type_spec = parser_type_spec(parser);
+    if (parser_has_error(parser)) {
+      return NULL;
+    }
+  }
 
   if (!parser_is_type(parser, '=')) {
     parser_error(parser, "\"=\" is expected after variable name");
@@ -131,10 +186,12 @@ Node *parser_var_decl(Parser *parser) {
     return NULL;
   }
 
-  return new_var_decl_node(tk_ident->val, expr);
+  Node *node = new_var_decl_node(tk_ident->val, expr);
+  node->type_spec = type_spec;
+  return node;
 }
 
-Map *parser_alloc_inits(Parser *parser) {
+Map *parser_inits(Parser *parser) {
   // consume "{"
   parser->pos++;
 
@@ -214,7 +271,7 @@ Node *parser_alloc_expr(Parser *parser) {
     return NULL;
   }
 
-  Map *inits = parser_alloc_inits(parser);
+  Map *inits = parser_inits(parser);
   if (inits == NULL) {
     return NULL;
   }
@@ -234,7 +291,7 @@ Node *parser_term(Parser *parser) {
   Token *tok = parser_tok(parser);
 
   // alloc expr
-  if (parser_is_ident_of(parser, "alloc")) {
+  if (parser_is_ident_of(parser, "new")) {
     return parser_alloc_expr(parser);
   }
 

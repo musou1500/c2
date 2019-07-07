@@ -22,6 +22,7 @@ enum NodeType {
   ND_ALLOC_ARRAY_EXPR,
   ND_BINOP_EXPR,
   ND_IDENT,
+  ND_TYPE_SPEC
 };
 
 struct Node;
@@ -31,6 +32,11 @@ typedef struct {
   struct Node *lhs;
   struct Node *rhs;
 } BinopExpr;
+
+typedef struct {
+  char *name;
+  Vec *params;
+} TypeSpec;
 
 typedef struct {
   char *name;
@@ -54,10 +60,12 @@ typedef struct {
 typedef struct {
   char *name;
   struct Node *expr;
+  TypeSpec *type_spec;
 } VarDecl;
 
 typedef struct Node {
   int type;
+  TypeSpec *type_spec;
 
   union {
     TypeDecl *type_decl;
@@ -70,6 +78,7 @@ typedef struct Node {
     double num_lit;
     char *ident;
   };
+
 } Node;
 
 TypeDecl *new_type_decl(char *name);
@@ -87,5 +96,6 @@ Node *new_alloc_expr_node(char *name, Map *inits);
 Node *new_alloc_array_expr_node(char *name, Node *size_expr);
 Node *new_binop_expr_node(int type, Node *lhs, Node *rhs);
 Node *new_ident_node(char *name);
+TypeSpec *new_type_spec(char *name, Vec *params);
 
 #endif /* end of include guard */

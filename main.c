@@ -21,6 +21,23 @@ void person_destruct(void *p) {
   free(p);
 }
 
+void print_type_spec(TypeSpec *type_spec) {
+  if (type_spec == NULL) {
+    printf("untyped");
+    return;
+  }
+  
+  printf("%s", type_spec->name);
+  if(type_spec->params->len > 0) {
+    printf("<");
+    for (int i = 0; i < type_spec->params->len; i++) {
+      TypeSpec *param_type_spec = (TypeSpec *)type_spec->params->data[i];
+      print_type_spec(param_type_spec);
+    }
+    printf(">");
+  }
+}
+
 void print_node(Node *node, int indent) {
   
   int indent_str_len = indent * 2;
@@ -47,7 +64,9 @@ void print_node(Node *node, int indent) {
     printf("ND_TYPE_DECL %s\n", node->type_decl->name);
     break;
   case ND_VAR_DECL:
-    printf("ND_VAR_DECL %s = \n", node->var_decl->name);
+    printf("ND_VAR_DECL var %s: ", node->var_decl->name);
+    print_type_spec(node->type_spec);
+    printf(" = \n");
     print_node(node->var_decl->expr, indent + 1);
     break;
   case ND_STRING_LIT:
@@ -100,6 +119,10 @@ void print_node(Node *node, int indent) {
 }
 
 int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    fprintf(stderr, "usage: refcount [source]\n");
+    return EXIT_FAILURE;
+  }
 
   char *source = argv[1];
   printf("source:\n%s\n\n", source);

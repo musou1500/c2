@@ -1,5 +1,5 @@
-var arr = alloc char[5];
-var p = alloc Person {
+var arr: [char] = new char[5];
+var p = new Person {
   .name = "musou1500",
   .age = 24
 };

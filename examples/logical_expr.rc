@@ -1,1 +1,1 @@
-var t = alloc Person { .name = musou1500 } == "musou1500" || 123.456;
+var t = new Person { .name = musou1500 } == "musou1500" || 123.456;

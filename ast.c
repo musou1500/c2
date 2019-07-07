@@ -107,4 +107,9 @@ Node *new_ident_node(char *name) {
   return node;
 }
 
-
+TypeSpec *new_type_spec(char *name, Vec *params) {
+  TypeSpec *type_spec = (TypeSpec *) malloc(sizeof(TypeSpec));
+  type_spec->name = name;
+  type_spec->params = params;
+  return type_spec;
+}
