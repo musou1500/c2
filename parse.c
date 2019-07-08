@@ -461,49 +461,7 @@ Node *parser_expr(Parser *parser) {
   return lhs;
 }
 
-Node *parser_stmt(Parser *parser);
-Node *parser_while_stmt(Parser *parser) {
-  // consume 'while'
-  parser->pos++;
-
-  Node *cond = parser_expr(parser);
-  if (parser_has_error(parser)) {
-    return NULL;
-  }
-
-  if (!parser_is_type(parser, '{')) {
-    parser_error(parser, "\"{\" is expected after \"while\"");
-    return NULL;
-  }
-
-  parser->pos++;
-  
-  Vec *stmts = new_vec();
-  while (!parser_is_end(parser) && !parser_is_type(parser, '}')) {
-    Node *stmt = parser_stmt(parser);
-    vec_push(stmts, stmt);
-  }
-  
-  if (parser_has_error(parser)) {
-    return NULL;
-  }
-
-  if (!parser_is_type(parser, '}')) {
-    parser_error(parser, "\"}\" is expected at end of while statement");
-    return NULL;
-  }
-
-  parser->pos++;
-  return new_while_stmt_node(cond, stmts);
-}
-
 Node *parser_stmt(Parser *parser) {
-
-  // while stmt doesn'nt needs ';'
-  if (parser_is_ident_of(parser, "while")) {
-    return parser_while_stmt(parser);
-  }
-
   Node *stmt;
   if (parser_is_ident_of(parser, "var")) {
     stmt = parser_var_decl(parser);

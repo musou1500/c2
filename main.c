@@ -89,15 +89,6 @@ void print_node(Node *node, int indent) {
     printf("ND_ALLOC_ARRAY_EXPR %s\n", node->alloc_array_expr->name);
     print_node(node->alloc_array_expr->size_expr, indent + 1);
     break;
-  case ND_WHILE:
-    printf("ND_WHILE\n");
-    print_node(node->while_stmt->cond, indent + 1);
-    Vec *stmts = node->while_stmt->stmts;
-    for (int i = 0; i < stmts->len; i++) {
-      Node *stmt = (Node *)stmts->data[i];
-      print_node(stmt, indent + 1);
-    }
-    break;
   case ND_BINOP_EXPR:
     printf("ND_BINOP_EXPR ");
     int op_type = node->binop_expr->type;

@@ -5,6 +5,3 @@ var p = new Person {
   .age = 24
 };
 
-while cond_expr() || cond_expr2() {
-  do_something();
-}
