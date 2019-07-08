@@ -142,3 +142,18 @@ Node *new_ret_stmt_node(Node *expr) {
   node->ret_stmt = new_ret_stmt(expr);
   return node;
 }
+
+FnDecl *new_fn_decl(char *name, Vec *arg_names, Vec *stmts) {
+  FnDecl *fn_decl = (FnDecl *)malloc(sizeof(FnDecl));
+  fn_decl->name = name;
+  fn_decl->arg_names = arg_names;
+  fn_decl->stmts = stmts;
+  return fn_decl;
+}
+
+Node *new_fn_decl_node(char *name, Vec *arg_names, Vec *stmts) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_FN_DECL;
+  node->fn_decl = new_fn_decl(name, arg_names, stmts);
+  return node;
+}

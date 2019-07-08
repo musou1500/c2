@@ -25,7 +25,8 @@ enum NodeType {
   ND_BINOP_EXPR,
   ND_IDENT,
   ND_IF_STMT,
-  ND_RET_STMT
+  ND_RET_STMT,
+  ND_FN_DECL
 };
 
 struct Node;
@@ -35,6 +36,12 @@ typedef struct IfStmt {
   Vec *stmts;
   struct Node *els;
 } IfStmt;
+
+typedef struct {
+  Vec *arg_names;
+  Vec *stmts;
+  char *name;
+} FnDecl;
 
 typedef struct {
   struct Node *expr;
@@ -89,6 +96,7 @@ typedef struct Node {
     BinopExpr *binop_expr;
     IfStmt *if_stmt;
     RetStmt *ret_stmt;
+    FnDecl *fn_decl;
     char *str_lit;
     double num_lit;
     char *ident;
@@ -116,5 +124,7 @@ Node *new_ident_node(char *name);
 Node *new_if_stmt_node(Node *cond, Vec *stmts, Node *els);
 TypeSpec *new_type_spec(char *name, Vec *params);
 Node *new_ret_stmt_node(Node *expr);
+FnDecl *new_fn_decl(char *name, Vec *arg_names, Vec *stmts);
+Node *new_fn_decl_node(char *name, Vec *arg_names, Vec *stmts);
 
 #endif /* end of include guard */

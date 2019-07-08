@@ -485,23 +485,11 @@ Node *parser_if_stmt(Parser *parser) {
   
   // consume '{'
   parser->pos++;
-  Vec *stmts = new_vec();
-  while (!parser_is_end(parser) && !parser_is_type(parser, '}')) {
-    Node *stmt = parser_stmt(parser);
-    if (parser_has_error(parser)) {
-      return NULL;
-    }
-
-    vec_push(stmts, stmt);
-  }
-  
-  if (!parser_is_type(parser, '}')) {
-    parser_error(parser, "\"}\" is expected after if stmt");
+  Vec *stmts = parser_block_stmt(parser);
+  if (parser_has_error(parser)) {
     return NULL;
   }
 
-  // consume '}'
-  parser->pos++;
   if (parser_is_ident_of(parser, "else")) {
     parser->pos++;
     return new_if_stmt_node(cond, stmts, parser_if_stmt(parser));
@@ -519,6 +507,27 @@ Node *parser_ret_stmt(Parser *parser) {
   }
 
   return new_ret_stmt_node(expr);
+}
+
+Vec *parser_block_stmt(Parser *parser) {
+  parser->pos++;
+  Vec *stmts = new_vec();
+  while (!parser_is_end(parser) && !parser_is_type(parser, '}')) {
+    Node *stmt = parser_stmt(parser);
+    if (parser_has_error(parser)) {
+      return NULL;
+    }
+
+    vec_push(stmts, stmt);
+  }
+  
+  if (!parser_is_type(parser, '}')) {
+    parser_error(parser, "\"}\" is expected after if stmt");
+    return NULL;
+  }
+
+  parser->pos++;
+  return stmts;
 }
 
 Node *parser_stmt(Parser *parser) {
@@ -549,6 +558,55 @@ Node *parser_stmt(Parser *parser) {
   // consume ";"
   parser->pos++;
   return stmt;
+}
+
+Node *parser_fn_decl(Parser *parser) {
+  // consume "fn"
+  parser->pos++;
+  if (!parser_is_ident(parser)) {
+    parser_error(parser, "identifier expected after \"fn\"");
+    return NULL;
+  }
+
+  Token *tok_ident = parser_tok(parser);
+  parser->pos++;
+
+  Vec *arg_names = new_vec();
+  Vec *type_spec = new_vec();
+  if (!parser_is_type(parser, '(')) {
+    parser_error(parser, "\"(\" expected after function name");
+    return NULL;
+  }
+
+  // TODO:parse args
+  parser->pos++;
+  while(parser_is_end(parser) && !parser_is_type(parser, ')')) {
+  
+  }
+
+  if (parser_has_error(parser)) {
+    return NULL;
+  } else if (parser_is_type(parser, ')')) {
+    parser_error(parser, "\")\" expected after args");
+    return NULL;
+  }
+  
+  // consume ")"
+  parser->pos++;
+
+  // TODO: parse return type
+  if (!parser_is_type(parser, ':')) {
+
+  } else {
+
+  }
+
+  Vec *stmts = parser_block_stmt(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
+
+  return new_fn_decl_node(tok_ident->val, arg_names, stmts);
 }
 
 Parser *parse(char *source) {
