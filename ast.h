@@ -38,12 +38,6 @@ typedef struct IfStmt {
 } IfStmt;
 
 typedef struct {
-  Vec *arg_names;
-  Vec *stmts;
-  char *name;
-} FnDecl;
-
-typedef struct {
   struct Node *expr;
 } RetStmt;
 
@@ -57,6 +51,13 @@ typedef struct {
   char *name;
   Vec *params;
 } TypeSpec;
+
+typedef struct {
+  Vec *args;
+  TypeSpec *ret_type_spec;
+  Vec *stmts;
+  char *name;
+} FnDecl;
 
 typedef struct {
   char *name;
@@ -124,7 +125,7 @@ Node *new_ident_node(char *name);
 Node *new_if_stmt_node(Node *cond, Vec *stmts, Node *els);
 TypeSpec *new_type_spec(char *name, Vec *params);
 Node *new_ret_stmt_node(Node *expr);
-FnDecl *new_fn_decl(char *name, Vec *arg_names, Vec *stmts);
-Node *new_fn_decl_node(char *name, Vec *arg_names, Vec *stmts);
+FnDecl *new_fn_decl(char *name, Vec *arg_names, TypeSpec *ret_type_spec, Vec *stmts);
+Node *new_fn_decl_node(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts);
 
 #endif /* end of include guard */

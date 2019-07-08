@@ -64,7 +64,7 @@ Node *parser_type_decl(Parser *parser) {
 }
 
 Node *parser_expr(Parser *parser);
-Vec *parser_args(Parser *parser) {
+Vec *parser_params(Parser *parser) {
   Vec *args = new_vec();
 
   if (parser_is_type(parser, ')')) {
@@ -94,7 +94,7 @@ Node *parser_fn_call(Parser *parser) {
 
   // consume "("
   parser->pos++;
-  Vec *args = parser_args(parser);
+  Vec *args = parser_params(parser);
 
   if (parser_has_error(parser)) {
     return NULL;
@@ -462,6 +462,29 @@ Node *parser_expr(Parser *parser) {
 }
 
 Node *parser_stmt(Parser *parser);
+
+Vec *parser_block_stmt(Parser *parser) {
+  // consume '{'
+  parser->pos++;
+  Vec *stmts = new_vec();
+  while (!parser_is_end(parser) && !parser_is_type(parser, '}')) {
+    Node *stmt = parser_stmt(parser);
+    if (parser_has_error(parser)) {
+      return NULL;
+    }
+
+    vec_push(stmts, stmt);
+  }
+
+  if (!parser_is_type(parser, '}')) {
+    parser_error(parser, "\"}\" is expected after block stmt");
+    return NULL;
+  }
+
+  parser->pos++;
+  return stmts;
+}
+
 Node *parser_elif(Parser *parser) {
   return NULL;
 }
@@ -484,7 +507,6 @@ Node *parser_if_stmt(Parser *parser) {
   }
   
   // consume '{'
-  parser->pos++;
   Vec *stmts = parser_block_stmt(parser);
   if (parser_has_error(parser)) {
     return NULL;
@@ -509,31 +531,14 @@ Node *parser_ret_stmt(Parser *parser) {
   return new_ret_stmt_node(expr);
 }
 
-Vec *parser_block_stmt(Parser *parser) {
-  parser->pos++;
-  Vec *stmts = new_vec();
-  while (!parser_is_end(parser) && !parser_is_type(parser, '}')) {
-    Node *stmt = parser_stmt(parser);
-    if (parser_has_error(parser)) {
-      return NULL;
-    }
 
-    vec_push(stmts, stmt);
-  }
-  
-  if (!parser_is_type(parser, '}')) {
-    parser_error(parser, "\"}\" is expected after if stmt");
-    return NULL;
-  }
-
-  parser->pos++;
-  return stmts;
-}
-
+Node *parser_fn_decl(Parser *parser);
 Node *parser_stmt(Parser *parser) {
   Node *stmt;
   if (parser_is_ident_of(parser, "if")) {
     return parser_if_stmt(parser);
+  } else if (parser_is_ident_of(parser, "fn")) {
+    return parser_fn_decl(parser);
   }
 
   if (parser_is_ident_of(parser, "var")) {
@@ -560,6 +565,47 @@ Node *parser_stmt(Parser *parser) {
   return stmt;
 }
 
+Vec *parser_args(Parser *parser) {
+  // consume '('
+  parser->pos++;
+
+  Vec *args = new_vec();
+  if (parser_is_type(parser, ')')) {
+    parser->pos++;
+    return args;
+  }
+
+  do {
+    if (!parser_is_ident(parser)) {
+      parser_error(parser, "identifier expected");
+      return NULL;
+    }
+
+    Token *tok_ident = parser_tok(parser);
+    parser->pos++;
+    
+    Node *arg = new_ident_node(tok_ident->val);
+    if (!parser_is_type(parser, ':')) {
+      parser_error(parser, "arg type can not be omitted");
+      return NULL;
+    }
+
+    parser->pos++;
+    TypeSpec *type_spec = parser_type_spec(parser);
+    arg->type_spec = type_spec;
+
+    vec_push(args, arg);
+  } while (parser_is_type(parser, ',') && parser->pos++);
+
+  if (!parser_is_type(parser, ')')) {
+    parser_error(parser, "\")\" expected after args");
+    return NULL;
+  }
+
+  parser->pos++;
+  return args;
+}
+
 Node *parser_fn_decl(Parser *parser) {
   // consume "fn"
   parser->pos++;
@@ -571,34 +617,28 @@ Node *parser_fn_decl(Parser *parser) {
   Token *tok_ident = parser_tok(parser);
   parser->pos++;
 
-  Vec *arg_names = new_vec();
-  Vec *type_spec = new_vec();
   if (!parser_is_type(parser, '(')) {
     parser_error(parser, "\"(\" expected after function name");
     return NULL;
   }
-
-  // TODO:parse args
-  parser->pos++;
-  while(parser_is_end(parser) && !parser_is_type(parser, ')')) {
   
-  }
-
+  Vec *args = parser_args(parser);
   if (parser_has_error(parser)) {
     return NULL;
-  } else if (parser_is_type(parser, ')')) {
-    parser_error(parser, "\")\" expected after args");
-    return NULL;
   }
   
-  // consume ")"
-  parser->pos++;
-
-  // TODO: parse return type
+  TypeSpec *ret_type_spec = NULL;
   if (!parser_is_type(parser, ':')) {
+    parser_error(parser, "return type can not be omitted");
+    return NULL;
+  }
 
-  } else {
+  parser->pos++;
+  ret_type_spec = parser_type_spec(parser);
 
+  if (!parser_is_type(parser, '{')) {
+    parser_error(parser, "\"{\" is expected before statements");
+    return NULL;
   }
 
   Vec *stmts = parser_block_stmt(parser);
@@ -606,7 +646,7 @@ Node *parser_fn_decl(Parser *parser) {
     return NULL;
   }
 
-  return new_fn_decl_node(tok_ident->val, arg_names, stmts);
+  return new_fn_decl_node(tok_ident->val, args, ret_type_spec, stmts);
 }
 
 Parser *parse(char *source) {

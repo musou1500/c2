@@ -143,17 +143,18 @@ Node *new_ret_stmt_node(Node *expr) {
   return node;
 }
 
-FnDecl *new_fn_decl(char *name, Vec *arg_names, Vec *stmts) {
+FnDecl *new_fn_decl(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts) {
   FnDecl *fn_decl = (FnDecl *)malloc(sizeof(FnDecl));
   fn_decl->name = name;
-  fn_decl->arg_names = arg_names;
+  fn_decl->args = args;
   fn_decl->stmts = stmts;
+  fn_decl->ret_type_spec = ret_type_spec;
   return fn_decl;
 }
 
-Node *new_fn_decl_node(char *name, Vec *arg_names, Vec *stmts) {
+Node *new_fn_decl_node(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts) {
   Node *node = (Node *)malloc(sizeof(Node));
   node->type = ND_FN_DECL;
-  node->fn_decl = new_fn_decl(name, arg_names, stmts);
+  node->fn_decl = new_fn_decl(name, args, ret_type_spec, stmts);
   return node;
 }

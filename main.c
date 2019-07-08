@@ -49,7 +49,9 @@ void print_node(Node *node, int indent) {
 
   switch (node->type) {
   case ND_IDENT:
-    printf("ND_IDENT %s\n", node->ident);
+    printf("ND_IDENT %s ", node->ident);
+    print_type_spec(node->type_spec);
+    printf("\n");
     break;
   case ND_FN_CALL:
     printf("ND_FN_CALL %s\n", node->fn_call->name);
@@ -104,6 +106,24 @@ void print_node(Node *node, int indent) {
     printf("ND_RET_STMT\n");
     print_node(node->ret_stmt->expr, indent + 1);
     break;
+  case ND_FN_DECL: {
+    printf("ND_FN_DECL %s: ", node->fn_decl->name);
+    print_type_spec(node->fn_decl->ret_type_spec);
+    printf("\n");
+    Vec *args = node->fn_decl->args;
+    for (int i = 0; i < args->len; i++) {
+      Node *arg = (Node *)args->data[i];
+      print_node(arg, indent + 1);
+    }
+
+    Vec *stmts = node->fn_decl->stmts;
+    for (int i = 0; i < stmts->len; i++) {
+      Node *stmt = (Node *)stmts->data[i];
+      print_node(stmt, indent + 1);
+    }
+
+    break;
+  }
   case ND_BINOP_EXPR:
     printf("ND_BINOP_EXPR ");
     int op_type = node->binop_expr->type;
@@ -135,6 +155,7 @@ void print_node(Node *node, int indent) {
     print_node(node->binop_expr->lhs, indent + 1);
     print_node(node->binop_expr->rhs, indent + 1);
   }
+
 }
 
 int main(int argc, char *argv[]) {
