@@ -23,7 +23,8 @@ enum NodeType {
   ND_ALLOC_ARRAY_EXPR,
   ND_BINOP_EXPR,
   ND_IDENT,
-  ND_TYPE_SPEC
+  ND_TYPE_SPEC,
+  ND_WHILE
 };
 
 struct Node;
@@ -64,6 +65,11 @@ typedef struct {
   TypeSpec *type_spec;
 } VarDecl;
 
+typedef struct {
+  struct Node *cond;
+  Vec *stmts;
+} WhileStmt;
+
 typedef struct Node {
   int type;
   TypeSpec *type_spec;
@@ -75,6 +81,7 @@ typedef struct Node {
     AllocExpr *alloc_expr;
     AllocArrayExpr *alloc_array_expr;
     BinopExpr *binop_expr;
+    WhileStmt *while_stmt;
     char *str_lit;
     double num_lit;
     char *ident;
@@ -88,6 +95,7 @@ AllocExpr *new_alloc_expr(char *name, Map *inits);
 AllocArrayExpr *new_alloc_array_expr(char *name, Node *size_expr);
 VarDecl *new_var_decl(char *name, Node *expr);
 BinopExpr *new_binop_expr(int type, Node *lhs, Node *rhs);
+WhileStmt *new_while_stmt(Node *cond, Vec *stmts);
 Node *new_type_decl_node(char *name);
 Node *new_fn_call_node(char *name, Vec *args);
 Node *new_var_decl_node(char *name, Node *expr);
@@ -97,6 +105,7 @@ Node *new_alloc_expr_node(char *name, Map *inits);
 Node *new_alloc_array_expr_node(char *name, Node *size_expr);
 Node *new_binop_expr_node(int type, Node *lhs, Node *rhs);
 Node *new_ident_node(char *name);
+Node *new_while_stmt_node(Node *cond, Vec *stmts);
 TypeSpec *new_type_spec(char *name, Vec *params);
 
 #endif /* end of include guard */

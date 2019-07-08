@@ -113,3 +113,17 @@ TypeSpec *new_type_spec(char *name, Vec *params) {
   type_spec->params = params;
   return type_spec;
 }
+
+WhileStmt *new_while_stmt(Node *cond, Vec *stmts) {
+  WhileStmt *stmt = (WhileStmt *)malloc(sizeof(WhileStmt));
+  stmt->cond = cond;
+  stmt->stmts = stmts;
+  return stmt;
+}
+
+Node *new_while_stmt_node(Node *cond, Vec *stmts) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_WHILE;
+  node->while_stmt = new_while_stmt(cond, stmts);
+  return node;
+}
