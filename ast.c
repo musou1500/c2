@@ -129,3 +129,16 @@ Node *new_if_stmt_node(Node *cond, Vec *stmts, Node *els) {
   node->if_stmt = new_if_stmt(cond, stmts, els);
   return node;
 }
+
+RetStmt *new_ret_stmt(Node *expr) {
+  RetStmt *stmt = (RetStmt *)malloc(sizeof(RetStmt));
+  stmt->expr = expr;
+  return stmt;
+}
+
+Node *new_ret_stmt_node(Node *expr) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_RET_STMT;
+  node->ret_stmt = new_ret_stmt(expr);
+  return node;
+}

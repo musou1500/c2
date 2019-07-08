@@ -25,7 +25,7 @@ enum NodeType {
   ND_BINOP_EXPR,
   ND_IDENT,
   ND_IF_STMT,
-  ND_RET
+  ND_RET_STMT
 };
 
 struct Node;
@@ -35,6 +35,10 @@ typedef struct IfStmt {
   Vec *stmts;
   struct Node *els;
 } IfStmt;
+
+typedef struct {
+  struct Node *expr;
+} RetStmt;
 
 typedef struct {
   int type;
@@ -84,6 +88,7 @@ typedef struct Node {
     AllocArrayExpr *alloc_array_expr;
     BinopExpr *binop_expr;
     IfStmt *if_stmt;
+    RetStmt *ret_stmt;
     char *str_lit;
     double num_lit;
     char *ident;
@@ -98,6 +103,7 @@ AllocArrayExpr *new_alloc_array_expr(char *name, Node *size_expr);
 VarDecl *new_var_decl(char *name, Node *expr);
 BinopExpr *new_binop_expr(int type, Node *lhs, Node *rhs);
 IfStmt *new_if_stmt(Node *cond, Vec *stmts, Node *els);
+RetStmt *new_ret_stmt(Node *expr);
 Node *new_type_decl_node(char *name);
 Node *new_fn_call_node(char *name, Vec *args);
 Node *new_var_decl_node(char *name, Node *expr);
@@ -109,5 +115,6 @@ Node *new_binop_expr_node(int type, Node *lhs, Node *rhs);
 Node *new_ident_node(char *name);
 Node *new_if_stmt_node(Node *cond, Vec *stmts, Node *els);
 TypeSpec *new_type_spec(char *name, Vec *params);
+Node *new_ret_stmt_node(Node *expr);
 
 #endif /* end of include guard */

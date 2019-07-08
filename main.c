@@ -100,6 +100,10 @@ void print_node(Node *node, int indent) {
     printf("ND_ALLOC_ARRAY_EXPR %s\n", node->alloc_array_expr->name);
     print_node(node->alloc_array_expr->size_expr, indent + 1);
     break;
+  case ND_RET_STMT:
+    printf("ND_RET_STMT\n");
+    print_node(node->ret_stmt->expr, indent + 1);
+    break;
   case ND_BINOP_EXPR:
     printf("ND_BINOP_EXPR ");
     int op_type = node->binop_expr->type;

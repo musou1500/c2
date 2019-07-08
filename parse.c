@@ -510,6 +510,16 @@ Node *parser_if_stmt(Parser *parser) {
   }
 }
 
+Node *parser_ret_stmt(Parser *parser) {
+  // consume "return"
+  parser->pos++;
+  Node *expr = parser_expr(parser);
+  if (parser_has_error(parser)) {
+    return NULL;
+  }
+
+  return new_ret_stmt_node(expr);
+}
 
 Node *parser_stmt(Parser *parser) {
   Node *stmt;
@@ -521,6 +531,8 @@ Node *parser_stmt(Parser *parser) {
     stmt = parser_var_decl(parser);
   } else if (parser_is_ident_of(parser, "type")) {
     stmt = parser_type_decl(parser);
+  } else if (parser_is_ident_of(parser, "return")) {
+    stmt = parser_ret_stmt(parser);
   } else {
     stmt = parser_expr(parser);
   }

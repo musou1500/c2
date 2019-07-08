@@ -8,3 +8,5 @@ var p = new Person {
 if (fst == arr[0] && len(arr) > 0) {
   do_something(1, 2, 3);
 }
+
+return 1 + 1;
