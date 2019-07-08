@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include "./ast.h"
 #include "./vec.h"
+#include <stdlib.h>
 
 TypeDecl *new_type_decl(char *name) {
   TypeDecl *type_decl = (TypeDecl *)malloc(sizeof(TypeDecl));
@@ -109,7 +109,7 @@ Node *new_ident_node(char *name) {
 }
 
 TypeSpec *new_type_spec(char *name, Vec *params) {
-  TypeSpec *type_spec = (TypeSpec *) malloc(sizeof(TypeSpec));
+  TypeSpec *type_spec = (TypeSpec *)malloc(sizeof(TypeSpec));
   type_spec->name = name;
   type_spec->params = params;
   return type_spec;
@@ -143,7 +143,8 @@ Node *new_ret_stmt_node(Node *expr) {
   return node;
 }
 
-FnDecl *new_fn_decl(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts) {
+FnDecl *new_fn_decl(char *name, Vec *args, TypeSpec *ret_type_spec,
+                    Vec *stmts) {
   FnDecl *fn_decl = (FnDecl *)malloc(sizeof(FnDecl));
   fn_decl->name = name;
   fn_decl->args = args;
@@ -152,7 +153,8 @@ FnDecl *new_fn_decl(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts) 
   return fn_decl;
 }
 
-Node *new_fn_decl_node(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts) {
+Node *new_fn_decl_node(char *name, Vec *args, TypeSpec *ret_type_spec,
+                       Vec *stmts) {
   Node *node = (Node *)malloc(sizeof(Node));
   node->type = ND_FN_DECL;
   node->fn_decl = new_fn_decl(name, args, ret_type_spec, stmts);

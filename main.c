@@ -26,9 +26,9 @@ void print_type_spec(TypeSpec *type_spec) {
     printf("untyped");
     return;
   }
-  
+
   printf("%s", type_spec->name);
-  if(type_spec->params->len > 0) {
+  if (type_spec->params->len > 0) {
     printf("<");
     for (int i = 0; i < type_spec->params->len; i++) {
       TypeSpec *param_type_spec = (TypeSpec *)type_spec->params->data[i];
@@ -155,7 +155,6 @@ void print_node(Node *node, int indent) {
     print_node(node->binop_expr->lhs, indent + 1);
     print_node(node->binop_expr->rhs, indent + 1);
   }
-
 }
 
 int main(int argc, char *argv[]) {

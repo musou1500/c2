@@ -1,6 +1,6 @@
 #include "./parse.h"
-#include "./lex.h"
 #include "./ast.h"
+#include "./lex.h"
 #include "./map.h"
 #include "./vec.h"
 #include <stdio.h>
@@ -125,7 +125,7 @@ TypeSpec *parser_type_spec(Parser *parser) {
       parser_error(parser, "\"]\" is expected after array type specifier");
       return NULL;
     }
-    
+
     // consume ']'
     parser->pos++;
     Vec *type_params = new_vec();
@@ -162,7 +162,7 @@ Node *parser_var_decl(Parser *parser) {
   Token *tk_ident = parser_tok(parser);
   // consume ident
   parser->pos++;
-  
+
   TypeSpec *type_spec = NULL;
   if (parser_is_type(parser, ':')) {
     // consume ':'
@@ -303,7 +303,7 @@ Node *parser_term(Parser *parser) {
     if (tok_is_type(next_tok, '(')) {
       return parser_fn_call(parser);
     }
-    
+
     // consume ident
     parser->pos++;
     return new_ident_node(tok->val);
@@ -485,9 +485,7 @@ Vec *parser_block_stmt(Parser *parser) {
   return stmts;
 }
 
-Node *parser_elif(Parser *parser) {
-  return NULL;
-}
+Node *parser_elif(Parser *parser) { return NULL; }
 
 Node *parser_if_stmt(Parser *parser) {
   Node *cond = NULL;
@@ -500,12 +498,11 @@ Node *parser_if_stmt(Parser *parser) {
     }
   }
 
-
   if (!parser_is_type(parser, '{')) {
     parser_error(parser, "\"{\" is expected if condition");
     return NULL;
   }
-  
+
   // consume '{'
   Vec *stmts = parser_block_stmt(parser);
   if (parser_has_error(parser)) {
@@ -530,7 +527,6 @@ Node *parser_ret_stmt(Parser *parser) {
 
   return new_ret_stmt_node(expr);
 }
-
 
 Node *parser_fn_decl(Parser *parser);
 Node *parser_stmt(Parser *parser) {
@@ -583,7 +579,7 @@ Vec *parser_args(Parser *parser) {
 
     Token *tok_ident = parser_tok(parser);
     parser->pos++;
-    
+
     Node *arg = new_ident_node(tok_ident->val);
     if (!parser_is_type(parser, ':')) {
       parser_error(parser, "arg type can not be omitted");
@@ -621,12 +617,12 @@ Node *parser_fn_decl(Parser *parser) {
     parser_error(parser, "\"(\" expected after function name");
     return NULL;
   }
-  
+
   Vec *args = parser_args(parser);
   if (parser_has_error(parser)) {
     return NULL;
   }
-  
+
   TypeSpec *ret_type_spec = NULL;
   if (!parser_is_type(parser, ':')) {
     parser_error(parser, "return type can not be omitted");
