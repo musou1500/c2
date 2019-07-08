@@ -2,6 +2,7 @@
 #define _AST_H
 
 #include "./map.h"
+#include "./vec.h"
 
 enum BinopType {
   BO_LOGICAL_OR = 256,
@@ -23,10 +24,17 @@ enum NodeType {
   ND_ALLOC_ARRAY_EXPR,
   ND_BINOP_EXPR,
   ND_IDENT,
-  ND_TYPE_SPEC
+  ND_IF_STMT,
+  ND_RET
 };
 
 struct Node;
+
+typedef struct IfStmt {
+  struct Node *cond;
+  Vec *stmts;
+  struct Node *els;
+} IfStmt;
 
 typedef struct {
   int type;
@@ -75,6 +83,7 @@ typedef struct Node {
     AllocExpr *alloc_expr;
     AllocArrayExpr *alloc_array_expr;
     BinopExpr *binop_expr;
+    IfStmt *if_stmt;
     char *str_lit;
     double num_lit;
     char *ident;
@@ -88,6 +97,7 @@ AllocExpr *new_alloc_expr(char *name, Map *inits);
 AllocArrayExpr *new_alloc_array_expr(char *name, Node *size_expr);
 VarDecl *new_var_decl(char *name, Node *expr);
 BinopExpr *new_binop_expr(int type, Node *lhs, Node *rhs);
+IfStmt *new_if_stmt(Node *cond, Vec *stmts, Node *els);
 Node *new_type_decl_node(char *name);
 Node *new_fn_call_node(char *name, Vec *args);
 Node *new_var_decl_node(char *name, Node *expr);
@@ -97,6 +107,7 @@ Node *new_alloc_expr_node(char *name, Map *inits);
 Node *new_alloc_array_expr_node(char *name, Node *size_expr);
 Node *new_binop_expr_node(int type, Node *lhs, Node *rhs);
 Node *new_ident_node(char *name);
+Node *new_if_stmt_node(Node *cond, Vec *stmts, Node *els);
 TypeSpec *new_type_spec(char *name, Vec *params);
 
 #endif /* end of include guard */

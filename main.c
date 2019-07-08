@@ -39,7 +39,6 @@ void print_type_spec(TypeSpec *type_spec) {
 }
 
 void print_node(Node *node, int indent) {
-  
   int indent_str_len = indent * 2;
   char indent_str[indent_str_len + 1];
   for (int i = 0; i < indent_str_len; i++) {
@@ -83,6 +82,18 @@ void print_node(Node *node, int indent) {
       Node *expr = (Node *)map_get(inits, key);
       printf("%s  .%s = \n", indent_str, key);
       print_node(expr, indent + 2);
+    }
+    break;
+  case ND_IF_STMT:
+    printf("ND_IF_STMT:\n");
+    if (node->if_stmt->cond != NULL) {
+      print_node(node->if_stmt->cond, indent + 1);
+    }
+
+    Vec *stmts = node->if_stmt->stmts;
+    for (int i = 0; i < stmts->len; i++) {
+      Node *stmt = (Node *)stmts->data[i];
+      print_node(stmt, indent + 1);
     }
     break;
   case ND_ALLOC_ARRAY_EXPR:

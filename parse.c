@@ -461,8 +461,62 @@ Node *parser_expr(Parser *parser) {
   return lhs;
 }
 
+Node *parser_stmt(Parser *parser);
+Node *parser_elif(Parser *parser) {
+  return NULL;
+}
+
+Node *parser_if_stmt(Parser *parser) {
+  Node *cond = NULL;
+  if (parser_is_ident_of(parser, "if")) {
+    // consume "if"
+    parser->pos++;
+    cond = parser_expr(parser);
+    if (parser_has_error(parser)) {
+      return NULL;
+    }
+  }
+
+
+  if (!parser_is_type(parser, '{')) {
+    parser_error(parser, "\"{\" is expected if condition");
+    return NULL;
+  }
+  
+  // consume '{'
+  parser->pos++;
+  Vec *stmts = new_vec();
+  while (!parser_is_end(parser) && !parser_is_type(parser, '}')) {
+    Node *stmt = parser_stmt(parser);
+    if (parser_has_error(parser)) {
+      return NULL;
+    }
+
+    vec_push(stmts, stmt);
+  }
+  
+  if (!parser_is_type(parser, '}')) {
+    parser_error(parser, "\"}\" is expected after if stmt");
+    return NULL;
+  }
+
+  // consume '}'
+  parser->pos++;
+  if (parser_is_ident_of(parser, "else")) {
+    parser->pos++;
+    return new_if_stmt_node(cond, stmts, parser_if_stmt(parser));
+  } else {
+    return new_if_stmt_node(cond, stmts, NULL);
+  }
+}
+
+
 Node *parser_stmt(Parser *parser) {
   Node *stmt;
+  if (parser_is_ident_of(parser, "if")) {
+    return parser_if_stmt(parser);
+  }
+
   if (parser_is_ident_of(parser, "var")) {
     stmt = parser_var_decl(parser);
   } else if (parser_is_ident_of(parser, "type")) {

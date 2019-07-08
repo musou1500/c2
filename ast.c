@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "./ast.h"
+#include "./vec.h"
 
 TypeDecl *new_type_decl(char *name) {
   TypeDecl *type_decl = (TypeDecl *)malloc(sizeof(TypeDecl));
@@ -112,4 +113,19 @@ TypeSpec *new_type_spec(char *name, Vec *params) {
   type_spec->name = name;
   type_spec->params = params;
   return type_spec;
+}
+
+IfStmt *new_if_stmt(Node *cond, Vec *stmts, Node *els) {
+  IfStmt *if_stmt = (IfStmt *)malloc(sizeof(IfStmt));
+  if_stmt->stmts = stmts;
+  if_stmt->els = els;
+  if_stmt->cond = cond;
+  return if_stmt;
+}
+
+Node *new_if_stmt_node(Node *cond, Vec *stmts, Node *els) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_IF_STMT;
+  node->if_stmt = new_if_stmt(cond, stmts, els);
+  return node;
 }
