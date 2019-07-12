@@ -23,4 +23,5 @@ Ref new_ref();
 void ref_destruct(Ref *ref);
 void ref_recycle(Ref* ref);
 void ref_assign(Ref* l, Ref* r);
+void *ref_get(Ref *ref);
 #endif

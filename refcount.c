@@ -48,3 +48,7 @@ void ref_assign(Ref *lhs, Ref *rhs) {
     lhs->destruct = rhs->destruct;
   }
 }
+
+void *ref_get(Ref *ref) {
+  return ref->val;
+}
