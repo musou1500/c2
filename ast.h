@@ -26,10 +26,16 @@ enum NodeType {
   ND_IDENT,
   ND_IF_STMT,
   ND_RET_STMT,
-  ND_FN_DECL
+  ND_FN_DECL,
+  ND_IMPORT
 };
 
 struct Node;
+
+typedef struct {
+  char *path;
+  Vec *items;
+} Import;
 
 typedef struct IfStmt {
   struct Node *cond;
@@ -98,6 +104,7 @@ typedef struct Node {
     IfStmt *if_stmt;
     RetStmt *ret_stmt;
     FnDecl *fn_decl;
+    Import *import;
     char *str_lit;
     double num_lit;
     char *ident;
@@ -127,5 +134,7 @@ TypeSpec *new_type_spec(char *name, Vec *params);
 Node *new_ret_stmt_node(Node *expr);
 FnDecl *new_fn_decl(char *name, Vec *arg_names, TypeSpec *ret_type_spec, Vec *stmts);
 Node *new_fn_decl_node(char *name, Vec *args, TypeSpec *ret_type_spec, Vec *stmts);
+Import *new_import(char *path, Vec *items);
+Node *new_import_node(char *path, Vec *items);
 
 #endif /* end of include guard */

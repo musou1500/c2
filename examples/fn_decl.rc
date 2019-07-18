@@ -1,3 +1,5 @@
+import "strutil"{s_concat};
+
 fn main(argc: int, argv: [[char]]): int {
   printf("Hello!");
   return 0;

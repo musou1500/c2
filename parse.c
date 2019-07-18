@@ -49,6 +49,53 @@ bool parser_is_end(Parser *parser) {
 
 void parser_error(Parser *parser, char *message) { parser->error = message; }
 
+Vec *parser_import_item_list(Parser *parser) {
+  Vec *items = new_vec();
+
+  if (parser_is_type(parser, '}')) {
+    return items;
+  }
+
+  do {
+    if (!parser_is_ident(parser)) {
+      return NULL;
+    }
+
+    Token *ident = parser_tok(parser);
+    vec_push(items, ident->val);
+    parser->pos++;
+  } while (parser_is_type(parser, ',') && parser->pos++);
+  return items;
+}
+
+Node *parser_import(Parser *parser) {
+  // consume "import"
+  parser->pos++;
+
+  if (!parser_is_type(parser, TK_STRING)) {
+    parser_error(parser, "path expected after \"import\"");
+    return NULL;
+  }
+
+  Token *path_tok = parser_tok(parser);
+  parser->pos++;
+
+  if (!parser_is_type(parser, '{')) {
+    parser_error(parser, "\"{\" expected after path");
+    return NULL;
+  }
+
+  parser->pos++;
+  Vec *import_item_list = parser_import_item_list(parser);
+  if (!parser_is_type(parser, '}')) {
+    parser_error(parser, "\"}\" expected after import item list");
+    return NULL;
+  }
+  parser->pos++;
+
+  return new_import_node(path_tok->val, import_item_list);
+}
+
 Node *parser_type_decl(Parser *parser) {
   // consume "type"
   parser->pos++;
@@ -543,6 +590,8 @@ Node *parser_stmt(Parser *parser) {
     stmt = parser_type_decl(parser);
   } else if (parser_is_ident_of(parser, "return")) {
     stmt = parser_ret_stmt(parser);
+  } else if (parser_is_ident_of(parser, "import")) {
+    stmt = parser_import(parser);
   } else {
     stmt = parser_expr(parser);
   }

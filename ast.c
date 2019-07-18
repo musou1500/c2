@@ -160,3 +160,17 @@ Node *new_fn_decl_node(char *name, Vec *args, TypeSpec *ret_type_spec,
   node->fn_decl = new_fn_decl(name, args, ret_type_spec, stmts);
   return node;
 }
+
+Import *new_import(char *path, Vec *items) {
+  Import *import = (Import *)malloc(sizeof(Import));
+  import->path = path;
+  import->items = items;
+  return import;
+}
+
+Node *new_import_node(char *path, Vec *items) {
+  Node *node = (Node *)malloc(sizeof(Node));
+  node->type = ND_IMPORT;
+  node->import = new_import(path, items);
+  return node;
+}

@@ -38,20 +38,29 @@ void print_type_spec(TypeSpec *type_spec) {
   }
 }
 
-void print_node(Node *node, int indent) {
-  int indent_str_len = indent * 2;
-  char indent_str[indent_str_len + 1];
-  for (int i = 0; i < indent_str_len; i++) {
-    indent_str[i] = ' ';
+void print_indent(int indent) {
+  for (int i = 0; i < indent; i++) {
+    printf("  ");
   }
-  indent_str[indent_str_len] = '\0';
-  printf("%s", indent_str);
+}
+
+void print_node(Node *node, int indent) {
+  print_indent(indent);
 
   switch (node->type) {
   case ND_IDENT:
     printf("ND_IDENT %s ", node->ident);
     print_type_spec(node->type_spec);
     printf("\n");
+    break;
+  case ND_IMPORT:
+    printf("ND_IMPORT %s\n", node->import->path);
+    Vec *import_items = node->import->items;
+    for (int i = 0; i < import_items->len; i++) {
+      char *item_name = (char *)import_items->data[i];
+      print_indent(indent + 1);
+      printf("%s\n", item_name);
+    }
     break;
   case ND_FN_CALL:
     printf("ND_FN_CALL %s\n", node->fn_call->name);
@@ -82,7 +91,8 @@ void print_node(Node *node, int indent) {
     for (int i = 0; i < inits->keys->len; i++) {
       char *key = (char *)inits->keys->data[i];
       Node *expr = (Node *)map_get(inits, key);
-      printf("%s  .%s = \n", indent_str, key);
+      print_indent(indent + 1);
+      printf(".%s = \n", key);
       print_node(expr, indent + 2);
     }
     break;
